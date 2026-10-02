@@ -1,0 +1,11 @@
+/* Impresión — utilidades de impresión y reglas @media print
+ * Moto Repuesto Sandy — extraído del monolito v18 v5.
+ * Mantener el orden de este archivo: la cascada depende de él.
+ */
+
+.print-only{display:none}
+.print-serial{display:inline-block;margin:8px 0 14px;padding:7px 11px;border:1px solid #222;border-radius:4px;font:700 11pt Arial,sans-serif}
+.print-comprobante{font-family:Arial,sans-serif}
+.print-comprobante .box{border:1px solid #ccc;padding:14px;margin:12px 0}
+.print-comprobante h1,.print-comprobante h2{font-family:Georgia,serif}
+@media print{body{background:#fff}.side,.no-print{display:none!important}.main{max-width:none;padding:0}.view{display:none!important}.view.printing{display:block!important}.print-only{display:block}.card{border:0;padding:0}.page-break{break-before:page}table{font-size:9pt}.kpi{break-inside:avoid}.print-report{display:block!important}}

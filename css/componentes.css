@@ -1,0 +1,66 @@
+/* Componentes — tarjetas, formularios, tablas, botones, KPIs, pills, modales
+ * Moto Repuesto Sandy — extraído del monolito v18 v5.
+ * Mantener el orden de este archivo: la cascada depende de él.
+ */
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:18px 20px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-size:.75rem;color:var(--soft);margin-bottom:4px}
+input,select,textarea{width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink);font:inherit}
+textarea{min-height:70px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--gold);outline-offset:1px}
+.btn{margin:10px 8px 0 0;border:0;border-radius:4px;background:var(--ink);color:#fff;padding:9px 15px;cursor:pointer}
+.btn.secondary{background:#fff;color:var(--ink);border:1px solid var(--ink)}
+.btn.danger{background:var(--red)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:7px;padding:14px}
+.kpi span{display:block;color:var(--soft);font-size:.72rem}
+.kpi b{display:block;margin-top:5px;font-size:1.2rem}
+.kpi small{color:var(--soft)}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th{text-align:left;color:var(--soft);font-size:.7rem;padding:7px;border-bottom:1px solid var(--line)}
+td{padding:8px 7px;border-bottom:1px solid #ede8dc;vertical-align:top}
+.r{text-align:right}
+.pos{color:var(--green)}
+.neg{color:var(--red)}
+.warn{color:var(--yellow)}
+.muted{color:var(--soft)}
+.empty{text-align:center;color:var(--soft);padding:20px}
+.pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:.7rem;font-weight:700}
+.pill.red{background:#f9dfdf;color:#8e2424}
+.pill.yellow{background:#fff0d4;color:#8b5a12}
+.pill.green{background:#dff0e6;color:#276042}
+.pill.gray{background:#eceff2;color:#56616f}
+.tot{display:flex;flex-wrap:wrap;gap:20px;justify-content:flex-end;margin-top:12px}
+.tot div{min-width:150px;text-align:right;color:var(--soft)}
+.tot b{display:block;color:var(--ink);font-size:1.05rem}
+.formula{background:#faf8f1;border-left:4px solid var(--gold);padding:12px 14px;margin:12px 0}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+.toolbar>div{min-width:150px}
+.action-buttons{display:flex;flex-wrap:nowrap;gap:4px;align-items:center;white-space:nowrap}
+.action-buttons .btn{margin:0;padding:6px 9px;white-space:nowrap;border:0;box-shadow:none}
+.action-buttons .btn.secondary{border:0;background:#f4f4f4;color:var(--ink)}
+.action-buttons .btn.secondary:hover{background:#e9e9e9}
+.action-buttons .btn.danger{border:0}
+.action-cell{width:1%;white-space:nowrap;vertical-align:middle}
+.section-title{font:600 1rem Georgia,serif;margin:6px 0 12px}
+.sem-day{border:1px solid var(--line);border-radius:7px;margin-bottom:10px;overflow:hidden}
+.sem-head{display:flex;justify-content:space-between;padding:9px 12px;background:#faf8f1;font-weight:700}
+.danger-row{background:#fff5f5}
+.days-status{display:inline-block;font-weight:700;white-space:nowrap}
+.days-status.green{color:#276042}
+.days-status.red{color:#a83232}
+.logo-preview{max-width:120px;max-height:70px;display:block;margin-top:8px}
+.note{font-size:.78rem;color:var(--soft)}
+.right{text-align:right}
+.toast.success{background:#2f6f4e!important}
+.signature{height:55px;border-bottom:1px solid var(--ink);margin:22px 35px 4px}
+.modal{display:none;position:fixed;inset:0;background:#0008;z-index:50;align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.modal-box{background:#fff;border:1px solid var(--line);border-radius:8px;max-width:900px;width:100%;max-height:90vh;overflow:auto;padding:20px}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
+.modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.muted-row{opacity:.72}
+.muted-row td{text-decoration:none}
+.muted-row .pill{font-weight:700}

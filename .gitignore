@@ -1,0 +1,13 @@
+# Dependencias (el proyecto no tiene runtime dependencies; esto es por si se instala jsdom)
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+*.swp
+
+# Copias de trabajo accidentales del monolito
+*.html.bak
+*.tmp

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Moto Repuesto Sandy — Gestión Financiera</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/componentes.css">
+<link rel="stylesheet" href="css/vistas.css">
+<link rel="stylesheet" href="css/impresion.css">
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="brand" id="brand">MOTO REPUESTO SANDY<small>Gestión financiera y operacional</small></div>
+  <div class="nav">
+    <div class="section">Gestión</div>
+    <button data-v="dashboard" class="active">📊 Resultados</button>
+    <button data-v="contado">🛒 Ventas de contado</button>
+    <button data-v="credito">📑 Ventas a crédito</button>
+    <button data-v="recibos">💵 Recibos de ingreso</button>
+    <div class="section">Obligaciones</div>
+    <button data-v="cxp" id="nav-cxp" aria-expanded="false">🧾 CxP y pagos <span class="nav-arrow" id="cxp-arrow" title="Mostrar subsecciones">▸</span></button>
+     <div class="nav-sub" id="cxp-subnav">
+       <a href="#cxp-acreedores" data-cxp-target="cxp-acreedores">Acreedores</a>
+       <a href="#cxp-facturas" data-cxp-target="cxp-facturas">Facturas de mercancía</a>
+       <a href="#cxp-prestamos" data-cxp-target="cxp-prestamos">Préstamos</a>
+       <a href="#cxp-pago-prestamo" data-cxp-target="cxp-pago-prestamo">Pago de préstamo</a>
+       <a href="#cxp-pagos" data-cxp-target="cxp-pagos">Pagos a suplidores</a>
+       <a href="#cxp-historial" data-cxp-target="cxp-historial">Historial de pagos</a>
+       <a href="#cxp-estados" data-cxp-target="cxp-estados">Estados de cuenta</a>
+       <a href="#cxp-antiguedad" data-cxp-target="cxp-antiguedad">Antigüedad de saldos</a>
+     </div>
+    <button data-v="gastos">💸 Gastos operacionales</button>
+    <button data-v="nomina">👷 Empleados y nómina</button>
+    <button data-v="cronograma">📅 Cronograma de pagos</button>
+    <div class="section">Configuración</div>
+    <button data-v="mantenimiento">🛡️ Mantenimiento y seguridad</button>
+    <button data-v="empresa">🏢 Empresa</button>
+  </div>
+</aside>
+<main class="main">
+<section id="v-dashboard" class="view active">
+  <h1>Resultados y rentabilidad</h1><p class="sub">Score semanal acumulable: ventas de contado, ventas a crédito y recibos de ingreso. Los tres datos se cargan manualmente a partir del sistema operativo del negocio.</p>
+  <div class="card no-print"><div class="grid"><div><label>Período</label><select id="dash-period" onchange="setDashPeriod()"><option value="semana">Semana actual</option><option value="mes" selected>Mes actual</option><option value="trimestre">Trimestre actual</option><option value="personalizado">Personalizado</option></select></div><div><label>Desde</label><input type="date" id="dash-desde"></div><div><label>Hasta</label><input type="date" id="dash-hasta"></div></div><button class="btn" onclick="renderDashboard()">Actualizar</button><button class="btn secondary" onclick="printReport('v-dashboard','Estado de resultados')">Imprimir</button></div>
+  <div class="kpis"><div class="kpi"><span>Ventas de contado</span><b id="d-contado">0.00</b></div><div class="kpi"><span>Ventas a crédito</span><b id="d-credito">0.00</b></div><div class="kpi"><span>Ventas totales</span><b id="d-ventas">0.00</b></div><div class="kpi"><span>Utilidad bruta estimada</span><b class="pos" id="d-bruta">0.00</b></div><div class="kpi"><span>Gastos operacionales</span><b class="neg" id="d-gastos">0.00</b></div><div class="kpi"><span>Resultado operacional</span><b id="d-operacional">0.00</b></div></div>
+  <div class="card"><div class="section-title">Estado de resultados operacional</div><table><tbody><tr><td>Ventas de contado</td><td class="r" id="r-contado">0.00</td></tr><tr><td>Ventas a crédito</td><td class="r" id="r-credito">0.00</td></tr><tr><td><b>Ventas totales</b></td><td class="r"><b id="r-ventas">0.00</b></td></tr><tr><td>Costo estimado de ventas</td><td class="r neg" id="r-costo">0.00</td></tr><tr><td><b>Utilidad bruta estimada</b></td><td class="r pos"><b id="r-bruta">0.00</b></td></tr><tr><td>Gastos operacionales</td><td class="r neg" id="r-gastos">0.00</td></tr><tr><td><b>RESULTADO OPERACIONAL</b></td><td class="r"><b id="r-op">0.00</b></td></tr></tbody></table><div class="formula">Margen bruto estimado: <b id="r-margen">30%</b>. El costo de ventas se estima con base en ese parámetro. Los recibos de ingreso son un indicador independiente y no modifican las ventas a crédito.</div></div>
+  <div class="kpis"><div class="kpi"><span>Recibos de ingreso del período</span><b class="pos" id="d-cobros">0.00</b></div><div class="kpi"><span>Score recibos / ventas</span><b id="d-score">0.00</b><small id="d-score-p">0%</small></div><div class="kpi"><span>Cuentas por cobrar actuales</span><b id="d-cxc">—</b></div><div class="kpi"><span>Cuentas por pagar suplidores</span><b class="neg" id="d-cxp">0.00</b></div><div class="kpi"><span>Gastos pendientes</span><b class="neg" id="d-pendg">0.00</b></div></div>
+  <div class="card"><div class="section-title">Composición de ventas</div><table><thead><tr><th>Indicador</th><th class="r">Monto</th><th class="r">% de ventas</th></tr></thead><tbody><tr><td>Contado</td><td class="r" id="mix-c">0.00</td><td class="r" id="mix-c-p">0%</td></tr><tr><td>Crédito</td><td class="r" id="mix-cr">0.00</td><td class="r" id="mix-cr-p">0%</td></tr></tbody></table></div>
+</section>
+<section id="v-contado" class="view">
+<h1>Ventas de contado — resultado semanal</h1>
+<p class="sub">Cada lunes se digita el total de ventas de contado correspondiente a la semana anterior. No se registran facturas individuales aquí.</p>
+<div class="card no-print"><div class="grid"><div><label>Semana que terminó</label><input type="date" id="vc-fecha"></div><div><label>Total ventas de contado</label><input type="number" step="0.01" id="vc-total" placeholder="0.00"></div><div><label>Observación (opcional)</label><input id="vc-nota" placeholder="Comentario de la semana"></div></div><button class="btn" onclick="addGestion('contado')">Guardar resultado semanal</button></div>
+<div class="card no-print"><div class="toolbar"><div><label>Desde</label><input type="date" id="vc-desde"></div><div><label>Hasta</label><input type="date" id="vc-hasta"></div><button class="btn" onclick="renderGestion('contado')">Consultar</button><button class="btn secondary" onclick="printReport('v-contado','Ventas de contado — resumen semanal')">Imprimir</button></div></div>
+<div class="card"><table><thead><tr><th>Semana terminada</th><th class="r">Ventas de contado</th><th>Observación</th><th class="no-print">Acción</th></tr></thead><tbody id="tbl-contado"></tbody></table><div class="tot"><div>Total del período<b id="vc-sum">0.00</b></div></div></div>
+</section>
+<section id="v-credito" class="view">
+<h1>Ventas a crédito — resultado semanal</h1>
+<p class="sub">Cada lunes se digita únicamente el total de ventas a crédito extraído del sistema ya instalado en el negocio.</p>
+<div class="card no-print"><div class="grid"><div><label>Semana que terminó</label><input type="date" id="cr-fecha"></div><div><label>Total ventas a crédito</label><input type="number" step="0.01" id="cr-total" placeholder="0.00"></div><div><label>Observación (opcional)</label><input id="cr-nota" placeholder="Comentario de la semana"></div></div><button class="btn" onclick="addGestion('credito')">Guardar resultado semanal</button></div>
+<div class="card no-print"><div class="toolbar"><div><label>Desde</label><input type="date" id="cr-desde"></div><div><label>Hasta</label><input type="date" id="cr-hasta"></div><button class="btn" onclick="renderGestion('credito')">Consultar</button><button class="btn secondary" onclick="printReport('v-credito','Ventas a crédito — resumen semanal')">Imprimir</button></div></div>
+<div class="card"><table><thead><tr><th>Semana terminada</th><th class="r">Ventas a crédito</th><th>Observación</th><th class="no-print">Acción</th></tr></thead><tbody id="tbl-credito"></tbody></table><div class="tot"><div>Total del período<b id="cr-sum">0.00</b></div></div></div>
+</section>
+<section id="v-recibos" class="view">
+<h1>Recibos de ingreso — resultado semanal</h1>
+<p class="sub">Cada lunes se digita el total de recibos de ingreso de la semana anterior. <b>Este indicador es independiente y no modifica las ventas a crédito.</b></p>
+<div class="card no-print"><div class="grid"><div><label>Semana que terminó</label><input type="date" id="ri-fecha"></div><div><label>Total recibos de ingreso</label><input type="number" step="0.01" id="ri-monto" placeholder="0.00"></div><div><label>Observación (opcional)</label><input id="ri-nota" placeholder="Comentario de la semana"></div></div><button class="btn" onclick="addGestion('recibos')">Guardar resultado semanal</button></div>
+<div class="card no-print"><div class="toolbar"><div><label>Desde</label><input type="date" id="ri-desde"></div><div><label>Hasta</label><input type="date" id="ri-hasta"></div><button class="btn" onclick="renderGestion('recibos')">Consultar</button><button class="btn secondary" onclick="printReport('v-recibos','Recibos de ingreso — resumen semanal')">Imprimir</button></div></div>
+<div class="card"><table><thead><tr><th>Semana terminada</th><th class="r">Recibos de ingreso</th><th>Observación</th><th class="no-print">Acción</th></tr></thead><tbody id="tbl-recibos"></tbody></table><div class="tot"><div>Total del período<b id="ri-sum">0.00</b></div></div></div>
+</section>
+<section id="v-cxp" class="view">
+<h1>CxP y pagos</h1><p class="sub">Aquí controlamos únicamente acreedores, cuentas por pagar de mercancía, préstamos y sus pagos. Las obligaciones de gastos se registran y pagan exclusivamente desde <b>Gastos operacionales</b>.</p>
+<div class="card cxp-section-anchor" id="cxp-acreedores"><div class="toolbar"><div class="section-title">Catálogo de acreedores</div><button class="btn secondary" onclick="printReport('cxp-acreedores','Catálogo de acreedores')">Imprimir reporte</button></div>
+<div class="card no-print"><div class="section-title">Nuevo acreedor</div><div class="grid"><div><label>Nombre / razón social</label><input id="ac-nombre"></div><div><label>Categoría</label><select id="ac-categoria"><option>Suplidor</option><option>Préstamo</option><option>Servicios</option><option>Nómina</option><option>Alquiler</option><option>Impuestos</option><option>Otros</option></select></div><div><label>RNC / Cédula</label><input id="ac-rnc"></div><div><label>Teléfono</label><input id="ac-tel"></div><div><label>Días de crédito (si aplica)</label><input type="number" id="ac-dias" value="30"></div></div><button class="btn" onclick="addAcreedor()">Guardar acreedor</button></div>
+<table><thead><tr><th>Código</th><th>Acreedor</th><th>Categoría</th><th>RNC / Cédula</th><th class="r">Saldo pendiente</th><th class="no-print">Acción</th></tr></thead><tbody id="tbl-acreedores"></tbody></table></div>
+<div class="card no-print cxp-section-anchor" id="cxp-facturas"><div class="section-title">Factura de suplidor</div><p class="note">Las compras de mercancía a crédito siguen manejándose por factura. El suplidor también queda registrado en el catálogo general de acreedores.</p><div class="grid"><div><label>Suplidor</label><select id="fx-sp"></select></div><div><label>Fecha</label><input type="date" id="fx-fecha"></div><div><label>Factura del suplidor</label><input id="fx-doc"></div><div><label>Días crédito</label><input type="number" id="fx-dias" value="30"></div><div><label>Total</label><input type="number" step="0.01" id="fx-total"></div><div><label>Concepto</label><input id="fx-concepto" placeholder="Compra de repuestos"></div></div><button class="btn" onclick="addFacturaSuplidor()">Registrar CxP de mercancía</button></div>
+<div class="card" id="cxp-facturas-list"><div class="toolbar no-print"><div><label>Suplidor</label><select id="fx-tercero" onchange="seleccionarSuplidorCxPFiltro(this.value)"><option value="">Todos los suplidores</option></select><input type="hidden" id="fx-tercero-id" value=""></div><div><label>Consulta</label><select id="fx-modo" onchange="toggleCxpFechas()"><option value="rango">Entre fechas</option><option value="corte">Al día</option></select></div><div id="fx-rango-desde"><label>Desde</label><input type="date" id="fx-desde"></div><div id="fx-rango-hasta"><label>Hasta</label><input type="date" id="fx-hasta"></div><div id="fx-corte-wrap" style="display:none"><label>Fecha de corte</label><input type="date" id="fx-corte"></div><div><label>Estado</label><select id="fx-estado"><option value="">Todos</option><option value="pendiente">Pendientes</option><option value="vencida">Vencidas</option><option value="pagada">Pagadas</option></select></div><button class="btn" onclick="renderCxp()">Consultar</button><button class="btn secondary" onclick="resetCxpBusqueda()">Restablecer búsqueda</button><button class="btn secondary" onclick="printReport('cxp-facturas-list','Cuentas por pagar — consulta filtrada')">Imprimir reporte</button></div><div class="section-title" id="cxp-facturas-title">Cuentas por pagar de mercancía — Suplidores</div><table><thead><tr><th>Código</th><th>Tipo</th><th>Suplidor</th><th>Documento</th><th>Fecha</th><th>Vence</th><th class="r">Días vencidos</th><th class="r">Total</th><th class="r">Saldo</th><th>Estado</th><th class="no-print">Acción</th></tr></thead><tbody id="tbl-facturas-cxp"></tbody></table><div class="tot"><div>Total pendiente<b id="fx-pend">0.00</b></div><div>Vencido<b id="fx-venc">0.00</b></div></div></div>
+<div class="card cxp-section-anchor" id="cxp-prestamos"><div class="toolbar no-print"><div class="section-title">Préstamos y calendario de cuotas</div><button class="btn secondary" onclick="printReport('cxp-prestamos','Préstamos y calendario de cuotas')">Imprimir reporte</button></div>
+<div class="card no-print" id="prestamo-captura"><div class="section-title">Centro de captura multifásico de préstamos</div><p class="note"><strong>Un solo centro para todos los préstamos.</strong> Permite registrar préstamos nuevos, préstamos que ya traen pagos anteriores y préstamos con tabla de amortización. Las fases adicionales solo aparecen cuando corresponden.</p>
+<div class="phase-head"><span class="phase-badge">1</span><b>Identificación y datos generales</b></div>
+<div class="grid"><div><label>Acreedor</label><select id="pr-acreedor"></select></div><div><label>Fecha de alta</label><input type="date" id="pr-fecha"></div><div><label>Referencia / contrato</label><input id="pr-referencia" placeholder="Opcional"></div><div><label>Monto original</label><input type="number" step="0.01" id="pr-original" oninput="actualizarResumenPrestamo()"></div></div>
+<div class="phase-head"><span class="phase-badge">2</span><b>Condiciones del préstamo</b></div>
+<div class="grid"><div><label>Modalidad</label><select id="pr-modalidad"><option>Cuota fija — capital e interés</option><option>Capital + interés variable</option><option>Solo capital</option><option>Otra modalidad</option></select></div><div><label>Tasa mensual (%)</label><input type="number" step="0.0001" id="pr-tasa-mensual"></div><div><label>Tasa anual (%)</label><input type="number" step="0.0001" id="pr-tasa-anual"></div><div><label>Seguro por cuota (%)</label><input type="number" min="0" step="0.000001" id="pr-seguro" value="0" placeholder="0.07"></div><div><label>Plazo total (cuotas)</label><input type="number" id="pr-total-cuotas"></div><div><label>Frecuencia</label><select id="pr-frecuencia"><option>Mensual</option><option>Quincenal</option><option>Semanal</option></select></div><div><label>Primera / próxima fecha de pago</label><input type="date" id="pr-vencimiento"></div><div><label>Cuota base (capital + interés)</label><input type="number" step="0.01" id="pr-cuota"><div class="note">En planes con seguro, el seguro se suma aparte a la cuota base.</div></div></div>
+<div class="phase-head"><span class="phase-badge">3</span><b>Situación al momento de registrar</b></div>
+<div class="choice-row"><label class="choice"><input type="radio" name="pr-situacion" value="nuevo" checked onchange="togglePrestamoFases()"> Préstamo nuevo — sin pagos anteriores</label><label class="choice"><input type="radio" name="pr-situacion" value="existente" onchange="togglePrestamoFases()"> Préstamo existente — ya tiene pagos</label></div>
+<div id="pr-historial-wrap" class="phase-panel" style="display:none"><div class="panel-title">Historial previo al registro</div><p class="note">Aquí podremos cargar en el futuro las cuotas o pagos que ya ocurrieron antes de incorporar el préstamo al sistema. El <b>capital aplicado</b> es el que reduce el saldo del préstamo.</p><div class="table-scroll"><table class="capture-table"><thead><tr><th>#</th><th>Fecha</th><th>Referencia</th><th class="r">Capital</th><th class="r">Interés</th><th class="r">Seguro</th><th class="r">Total</th><th></th></tr></thead><tbody id="pr-historial-body"></tbody></table></div><button type="button" class="btn secondary" onclick="addPrestamoHistRow()">+ Agregar pago anterior</button></div>
+<div class="phase-head"><span class="phase-badge">4</span><b>Tabla de amortización</b></div>
+<div class="choice-row"><label class="choice"><input type="radio" name="pr-amort" value="no" checked onchange="togglePrestamoFases()"> No tengo tabla oficial</label><label class="choice"><input type="radio" name="pr-amort" value="si" onchange="togglePrestamoFases()"> Tengo tabla de amortización</label></div>
+<div id="pr-amort-wrap" class="phase-panel"><div class="panel-title">Tabla de amortización</div><p class="note"><strong>Importante:</strong> no necesitas tener una tabla oficial para continuar. Puedes generar automáticamente el calendario desde las condiciones del préstamo. Si recibiste una tabla oficial, también puedes capturar sus valores manualmente y conservarlos tal como fueron emitidos.</p><div class="form-actions" style="margin-bottom:12px"><button type="button" class="btn" onclick="generarTablaAmortizacionAutomatica()">Generar automáticamente</button><button type="button" class="btn secondary" onclick="addPrestamoAmortRow()">+ Agregar cuota manual</button><button type="button" class="btn secondary" onclick="imprimirTablaAmortizacionCaptura()">Imprimir tabla</button></div><div class="table-scroll"><table class="capture-table"><thead><tr><th>#</th><th>Fecha</th><th class="r">Capital</th><th class="r">Interés</th><th class="r">Seguro</th><th class="r">Cuota total</th><th class="r">Saldo capital</th><th></th></tr></thead><tbody id="pr-amort-body"></tbody></table></div></div>
+<div class="phase-head"><span class="phase-badge">5</span><b>Resumen antes de guardar</b></div>
+<div class="capture-summary" id="pr-capture-summary"><span>Capital original <b id="pr-sum-original">0.00</b></span><span>Capital histórico <b id="pr-sum-capital">0.00</b></span><span>Saldo inicial <b id="pr-sum-saldo">0.00</b></span><span>Cuotas cargadas <b id="pr-sum-cuotas">0</b></span></div>
+<div class="form-actions"><button class="btn" type="button" onclick="addPrestamo()">Registrar préstamo</button><button class="btn secondary" type="button" onclick="imprimirRecepcionPrestamoCaptura()">Imprimir recepción</button><button class="btn secondary" type="button" onclick="cancelarRegistroPrestamo()">Cancelar operación</button></div></div>
+<table><thead><tr><th>Préstamo</th><th>Acreedor</th><th class="r">Saldo</th><th>Cuota</th><th>Próxima</th><th>Vence</th><th>Progreso</th><th class="no-print">Acción</th></tr></thead><tbody id="tbl-prestamos"></tbody></table>
+<div class="card no-print cxp-section-anchor" id="cxp-cuotas-prestamo">
+  <div class="section-title">Control de cuotas por pagar</div>
+  <p class="note">Registra la cuota que corresponde al préstamo y decide si queda <b>Pendiente</b> o <b>Pagada</b>. Las cuotas pendientes se incorporan automáticamente al cronograma de pagos. Si la marcas como pagada, se aplica al préstamo y queda registrada en el historial de pagos.</p>
+  <div class="grid">
+    <div><label>Préstamo</label><select id="cqp-prestamo" onchange="prepararControlCuotaPrestamo()"></select></div>
+    <div><label>Cuota #</label><input type="number" id="cqp-numero" min="1" step="1" oninput="prepararControlCuotaPrestamo(true)"></div>
+    <div><label>Fecha de vencimiento</label><input type="date" id="cqp-fecha"></div>
+    <div><label>Monto de la cuota</label><input type="number" step="0.01" id="cqp-monto"></div>
+    <div><label>Estado</label><select id="cqp-estado"><option>Pendiente</option><option>Pagada</option></select></div>
+    <div><label>Método de pago</label><select id="cqp-metodo"><option>No aplica aún</option><option>Transferencia</option><option>Efectivo</option><option>Cheque</option><option>Tarjeta</option></select></div>
+    <div><label>Referencia</label><input id="cqp-ref" placeholder="Opcional"></div>
+  </div>
+  <div class="form-actions">
+    <button class="btn" type="button" onclick="registrarCuotaPrestamoControl()">Registrar cuota</button>
+    <button class="btn secondary" type="button" onclick="imprimirCuotaPrestamoSeleccionada()">Imprimir comprobante</button>
+  </div>
+  <div id="cqp-comprobantes" class="table-scroll" style="margin-top:14px"></div>
+</div>
+<div class="card no-print cxp-section-anchor" id="cxp-pago-prestamo"><div class="section-title">Registrar pago de préstamo</div><div class="grid"><div><label>Préstamo</label><select id="prp-prestamo" onchange="actualizarReferenciaPagoPrestamo()"></select></div><div><label>Fecha</label><input type="date" id="prp-fecha"></div><div><label>Monto</label><input type="number" step="0.01" id="prp-monto" oninput="actualizarReferenciaPagoPrestamo()"></div><div><label>Método</label><select id="prp-metodo"><option>Transferencia</option><option>Efectivo</option><option>Cheque</option><option>Tarjeta</option></select></div><div><label>Referencia</label><input id="prp-ref" placeholder="Se genera automáticamente" readonly></div></div><button class="btn" onclick="addPagoPrestamo()">Registrar cuota / pago</button></div></div>
+<div class="card no-print cxp-section-anchor" id="cxp-pagos"><div class="section-title">Pago a suplidor</div><div class="grid"><div><label>Suplidor</label><select id="pg-sp" onchange="$('pg-monto').value='';$('pg-ref').value='';renderFacturasPagoSp()"></select></div><div><label>Fecha</label><input type="date" id="pg-fecha"></div><div><label>Monto</label><input type="number" step="0.01" id="pg-monto" oninput="actualizarReferenciaPagoSp()"></div><div><label>Método</label><select id="pg-metodo"><option>Transferencia</option><option>Efectivo</option><option>Cheque</option><option>Tarjeta</option></select></div><div><label>Referencia</label><input id="pg-ref" placeholder="Se genera automáticamente" readonly></div></div><div id="pg-facturas"></div><button class="btn" onclick="addPagoSuplidor()">Registrar pago a suplidor</button></div>
+<div class="card cxp-section-anchor" id="cxp-historial"><div class="toolbar no-print"><div class="section-title">Historial de pagos</div><button class="btn secondary" onclick="printReport('cxp-historial','Historial de pagos')">Imprimir reporte</button></div><div class="section-title">Pagos a suplidores</div><table><thead><tr><th>Recibo</th><th>Fecha</th><th>Suplidor</th><th>Referencia</th><th class="r">Monto</th><th class="no-print">Acción</th></tr></thead><tbody id="tbl-pagos-sp"></tbody></table><div class="section-title" style="margin-top:20px">Pagos de préstamos</div><table><thead><tr><th>Comprobante</th><th>Fecha</th><th>Acreedor</th><th>Referencia</th><th class="r">Monto</th><th>Estado</th><th class="no-print">Acción</th></tr></thead><tbody id="tbl-pagos-oblig"></tbody></table></div>
+<div class="card cxp-section-anchor" id="cxp-estados">
+  <div class="toolbar no-print"><div class="section-title">Estados de cuenta</div><button class="btn secondary" onclick="printReport('cxp-estados','Estado de cuenta por suplidor o acreedor')">Imprimir estado</button></div>
+  <p class="note">Consulta movimientos y saldos <b>entre fechas</b> o <b>al día</b>. Primero define si deseas ver <b>General</b>, <b>Suplidores</b> o <b>Acreedores</b>, y luego selecciona el tercero específico.</p>
+  <div class="grid no-print">
+    <div><label>Tipo</label><select id="ec-tipo" onchange="fillReporteTerceros('ec');clearEstadoCuentaResultado()"><option value="general">General — suplidores y acreedores</option><option value="suplidores">Suplidores — mercancía</option><option value="acreedores">Acreedores — servicios, gastos y préstamos</option></select></div>
+    <div><label>Suplidor / acreedor</label><select id="ec-tercero" onchange="clearEstadoCuentaResultado()"></select></div>
+    <div><label>Consulta</label><select id="ec-modo" onchange="toggleEstadoCuenta();clearEstadoCuentaResultado()"><option value="rango">Entre fechas</option><option value="corte">Al día</option></select></div>
+    <div><label>Formato del reporte</label><select id="ec-formato" onchange="clearEstadoCuentaResultado()"><option value="detallado">Detallado — movimientos completos</option><option value="resumido">Resumido — totales por tercero</option></select></div>
+    <div><label>Desde</label><input type="date" id="ec-desde" onchange="clearEstadoCuentaResultado()"></div>
+    <div><label>Hasta</label><input type="date" id="ec-hasta" onchange="clearEstadoCuentaResultado()"></div>
+    <div><label>Al día</label><input type="date" id="ec-corte" onchange="clearEstadoCuentaResultado()"></div>
+  </div>
+  <div class="no-print"><button type="button" class="btn" onclick="consultarEstadoCuentaCxp()">Consultar estado</button><button class="btn secondary" onclick="resetEstadoCuentaCxp()">Restablecer búsqueda</button></div>
+  <div class="card" id="estado-cuenta-cxp-contenido"><div class="empty">Selecciona la condición y el tercero para consultar.</div></div>
+</div>
+<div class="card cxp-section-anchor" id="cxp-antiguedad">
+  <div class="toolbar no-print"><div class="section-title">Análisis por antigüedad de saldo</div><button class="btn secondary" onclick="printReport('cxp-antiguedad','Antigüedad de saldos por suplidor o acreedor')">Imprimir antigüedad</button></div>
+  <p class="note">Muestra los saldos pendientes agrupados por antigüedad al corte. Puedes analizar <b>General</b>, solamente <b>Suplidores</b> o solamente <b>Acreedores</b>, y seleccionar un tercero específico.</p>
+  <div class="grid no-print">
+    <div><label>Condición</label><select id="ag-tipo" onchange="fillReporteTerceros('ag')"><option value="general">General — suplidores y acreedores</option><option value="suplidores">Suplidores — mercancía</option><option value="acreedores">Acreedores — servicios, gastos y préstamos</option></select></div>
+    <div><label>Suplidor / acreedor</label><select id="ag-tercero"></select></div>
+    <div><label>Fecha de corte</label><input type="date" id="ag-corte"></div>
+  </div>
+  <div class="no-print"><button class="btn" onclick="renderAntiguedadCxp()">Analizar saldos</button><button class="btn secondary" onclick="resetAntiguedadCxp()">Restablecer búsqueda</button></div>
+  <div class="card" id="antiguedad-cxp-contenido"><table><thead><tr><th>Suplidor / acreedor</th><th class="r">Corriente</th><th class="r">1–30</th><th class="r">31–60</th><th class="r">61–90</th><th class="r">+90</th><th class="r">Total</th></tr></thead><tbody id="tbl-cxp-antiguedad-general"></tbody><tfoot id="tfoot-cxp-antiguedad-general"></tfoot></table></div>
+</div>
+</section>
+<section id="v-gastos" class="view">
+<h1>Gastos operacionales</h1><p class="sub">Controla gastos que afectan el resultado operacional. Los gastos pendientes pueden quedar vinculados a un acreedor; no los confundimos con compras de mercancía ni con préstamos.</p>
+<div class="card no-print"><div class="grid"><div><label>Fecha del gasto</label><input type="date" id="ga-fecha"></div><div><label>Categoría</label><select id="ga-cat"><option>Alquiler</option><option>Energía eléctrica</option><option>Agua</option><option>Internet / teléfono</option><option>Combustible</option><option>Transporte</option><option>Nómina</option><option>Mantenimiento</option><option>Publicidad</option><option>Papelería</option><option>Otros</option></select></div><div><label>Acreedor / beneficiario</label><select id="ga-acreedor"></select></div><div><label>Beneficiario (si no está en catálogo)</label><input id="ga-benef"></div><div><label>Descripción</label><input id="ga-desc"></div><div><label>Monto</label><input type="number" step="0.01" id="ga-monto"></div><div><label>Vencimiento (si queda pendiente)</label><input type="date" id="ga-venc"></div><div><label>Estado</label><select id="ga-estado"><option>Pagado</option><option>Pendiente</option></select></div><div><label>Método de pago</label><select id="ga-metodo"><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option><option>Cheque</option><option>No aplica aún</option></select></div></div><p class="note">Si marcas <b>Pendiente</b>, el sistema crea también la obligación interna en CxP y la muestra en el cronograma. El comprobante visible y la referencia documental siempre serán <b>GO-xxxxx</b>.</p><div class="action-buttons"><button class="btn" type="button" onclick="addGasto()">Registrar gasto</button><button class="btn secondary" type="button" onclick="cancelarRegistroGasto()">Cancelar operación</button></div></div>
+<div class="card no-print"><div class="toolbar"><div><label>Desde</label><input type="date" id="ga-desde"></div><div><label>Hasta</label><input type="date" id="ga-hasta"></div><div><label>Estado</label><select id="ga-filtro"><option value="">Todos</option><option>Pagado</option><option>Pendiente</option></select></div><button class="btn" onclick="renderGastos()">Consultar</button><button class="btn secondary" onclick="printReport('v-gastos','Gastos operacionales')">Imprimir</button></div></div>
+<div class="card"><table><thead><tr><th>Código</th><th>Fecha</th><th>Categoría</th><th>Beneficiario</th><th>Descripción</th><th class="r">Monto</th><th>Estado</th><th class="no-print">Acción</th></tr></thead><tbody id="tbl-gastos"></tbody></table><div class="tot"><div>Gastos del período<b id="ga-sum">0.00</b></div><div>Pendientes<b id="ga-pend">0.00</b></div></div></div>
+<div class="card no-print" id="gastos-pagos"><div class="section-title">Registrar pago de gasto pendiente</div><p class="note">Las obligaciones de energía, internet, nómina, alquiler, impuestos y otros gastos se pagan aquí. No es necesario entrar a CxP.</p><div class="grid"><div><label>Obligación</label><select id="obp-obligacion"></select></div><div><label>Fecha</label><input type="date" id="obp-fecha"></div><div><label>Monto</label><input type="number" step="0.01" id="obp-monto"></div><div><label>Método</label><select id="obp-metodo"><option>Transferencia</option><option>Efectivo</option><option>Cheque</option><option>Tarjeta</option></select></div><div><label>Referencia</label><input id="obp-ref"></div></div><button class="btn" onclick="addPagoObligacion()">Registrar pago</button></div>
+<div class="card" id="gastos-historial-pagos"><div class="toolbar no-print"><div class="section-title">Historial de pagos de gastos</div><button class="btn secondary" onclick="printReport('gastos-historial-pagos','Historial de pagos de gastos')">Imprimir reporte</button></div><table><thead><tr><th>Comprobante</th><th>Fecha</th><th>Tipo</th><th>Acreedor</th><th>Referencia</th><th class="r">Monto</th><th class="no-print">Acción</th></tr></thead><tbody id="tbl-pagos-gastos"></tbody></table></div>
+</section>
+<section id="v-nomina" class="view">
+<h1>Empleados y nómina</h1>
+<p class="sub">Los empleados se administran aquí como personal, no como suplidores ni acreedores. La nómina genera el gasto operacional de personal y mantiene por separado lo pendiente de pago.</p>
+
+<div class="card no-print">
+  <div class="section-title">Catálogo de empleados</div>
+  <div class="grid">
+    <div><label>Nombre completo</label><input id="emp-nombre" placeholder="Ej. Antonio de Jesús"></div>
+    <div><label>Cédula</label><input id="emp-cedula"></div>
+    <div><label>Cargo</label><input id="emp-cargo"></div>
+    <div><label>Fecha de ingreso</label><input type="date" id="emp-ingreso"></div>
+    <div><label>Jornada</label><select id="emp-jornada"><option>Tiempo completo</option><option>Medio tiempo</option></select></div>
+    <div><label>Frecuencia de pago</label><select id="emp-frecuencia"><option>Quincenal</option><option>Semanal</option><option>Mensual</option></select></div>
+    <div><label>Salario mensual</label><input type="number" step="0.01" id="emp-salario" placeholder="0.00"></div>
+    <div><label>Pago por período</label><input type="number" step="0.01" id="emp-periodo" placeholder="0.00"></div>
+  </div>
+  <button class="btn" onclick="addEmpleado()">Guardar empleado</button>
+</div>
+
+<div class="card">
+  <table><thead><tr><th>Código</th><th>Empleado</th><th>Cargo</th><th>Frecuencia</th><th class="r">Salario mensual</th><th class="r">Pago por período</th><th>Estado</th><th class="no-print">Acción</th></tr></thead>
+  <tbody id="tbl-empleados"></tbody></table>
+</div>
+
+<div class="card no-print">
+  <div class="section-title">Registrar nómina / pago quincenal</div>
+  <p class="note">Al registrar una nómina se reconoce el gasto de personal. Si queda <b>Pendiente</b>, queda como nómina por pagar dentro de este módulo; no se crea un acreedor en CxP. Al pagarla, se cierra la nómina y se actualiza el gasto operacional correspondiente.</p>
+  <div class="grid">
+    <div><label>Empleado</label><select id="nom-empleado" onchange="suggestNominaMonto()"></select></div>
+    <div><label>Período desde</label><input type="date" id="nom-desde"></div>
+    <div><label>Período hasta</label><input type="date" id="nom-hasta"></div>
+    <div><label>Fecha de pago / vencimiento</label><input type="date" id="nom-fecha"></div>
+    <div><label>Monto</label><input type="number" step="0.01" id="nom-monto"></div>
+    <div><label>Estado</label><select id="nom-estado"><option>Pagado</option><option>Pendiente</option></select></div>
+    <div><label>Método</label><select id="nom-metodo"><option>Efectivo</option><option>Transferencia</option><option>Cheque</option><option>Tarjeta</option><option>Pendiente</option></select></div>
+    <div><label>Referencia</label><input id="nom-ref"></div>
+    <div><label>Observación</label><input id="nom-nota" placeholder="Primera quincena, segunda quincena, etc."></div>
+  </div>
+  <button class="btn" onclick="addNomina()">Registrar nómina</button>
+</div>
+
+<div class="card no-print">
+  <div class="toolbar">
+    <div class="section-title">Nóminas registradas</div>
+    <button class="btn secondary" onclick="printReport('v-nomina','Empleados y nómina')">Imprimir reporte</button>
+  </div>
+  <div class="grid">
+    <div><label>Desde</label><input type="date" id="nom-f-desde"></div>
+    <div><label>Hasta</label><input type="date" id="nom-f-hasta"></div>
+    <div><label>Estado</label><select id="nom-f-estado"><option value="">Todos</option><option>Pagado</option><option>Pendiente</option></select></div>
+  </div>
+  <div class="no-print" style="margin-bottom:12px"><button class="btn" onclick="renderNomina()">Consultar</button><button class="btn secondary" onclick="resetNominaFiltro()">Restablecer búsqueda</button></div>
+  <table><thead><tr><th>Comprobante</th><th>Empleado</th><th>Período</th><th>Fecha</th><th class="r">Monto</th><th>Estado</th><th>Método</th><th class="no-print">Acción</th></tr></thead>
+  <tbody id="tbl-nomina"></tbody></table>
+  <div class="tot"><div>Total del período<b id="nom-sum">0.00</b></div><div>Pendiente de pago<b id="nom-pend">0.00</b></div></div>
+</div>
+</section>
+<section id="v-cronograma" class="view">
+<h1>Cronograma de pagos</h1><p class="sub">Previsión semanal de todas las obligaciones: mercancía a crédito, servicios, nómina, alquileres, impuestos y cuotas de préstamos.</p>
+<div class="card no-print"><div class="grid"><div><label>Semana desde</label><input type="date" id="co-desde"></div><div><label>Semana hasta</label><input type="date" id="co-hasta"></div><div><label>Tipo</label><select id="co-tipo"><option value="">Todos</option><option value="suplidor">Suplidores</option><option value="obligacion">Obligaciones de gasto</option><option value="prestamo">Préstamos</option><option value="gasto">Gastos pendientes antiguos</option></select></div></div><button class="btn" onclick="renderCronograma()">Generar</button><button class="btn secondary" onclick="setNextWeek();renderCronograma()">Próxima semana</button><button class="btn secondary" onclick="printReport('v-cronograma','Cronograma semanal de pagos')">Imprimir</button></div>
+<div class="kpis"><div class="kpi"><span>Vencido / inmediato</span><b class="neg" id="co-red">0.00</b></div><div class="kpi"><span>Próximos 1–3 días</span><b class="warn" id="co-yellow">0.00</b></div><div class="kpi"><span>4–7 días</span><b class="pos" id="co-green">0.00</b></div><div class="kpi"><span>Total semana</span><b id="co-total">0.00</b></div></div><div id="cronograma-body"></div>
+</section>
+<section id="v-mantenimiento" class="view">
+<h1>Mantenimiento y seguridad</h1>
+<p class="sub">Protege los datos del sistema, controla el almacenamiento local y mantiene copias de seguridad fuera del navegador. La conexión con Google Drive se realiza mediante una carpeta de Google Drive para escritorio que tú autorizas desde Chrome.</p>
+
+<div class="card no-print">
+  <div class="section-title">Estado de seguridad</div>
+  <div class="kpis">
+    <div class="kpi"><span>Base de datos local</span><b id="ms-db-status">—</b><small id="ms-db-detail">—</small></div>
+    <div class="kpi"><span>Tamaño de los datos</span><b id="ms-db-size">—</b><small id="ms-db-quota">—</small></div>
+    <div class="kpi"><span>Última copia local</span><b id="ms-last-local">—</b><small id="ms-last-local-detail">—</small></div>
+    <div class="kpi"><span>Google Drive</span><b id="ms-drive-status">No conectado</b><small id="ms-drive-detail">—</small></div>
+  </div>
+</div>
+
+<div class="card no-print" id="ms-idb-test">
+  <div class="section-title">Prueba de almacenamiento IndexedDB</div>
+  <p class="note"><b>Entorno de prueba:</b> por ahora el sistema sigue usando localStorage como almacenamiento principal, mientras guarda una copia paralela en IndexedDB. Esto nos permite probar el nuevo motor sin poner en riesgo los datos actuales.</p>
+  <div class="grid2">
+    <div><label>Estado IndexedDB</label><b id="ms-idb-status">Comprobando...</b></div>
+    <div><label>Última sincronización de prueba</label><b id="ms-idb-last">—</b></div>
+  </div>
+  <div style="margin-top:12px"><button class="btn" onclick="testIndexedDB()">Probar IndexedDB ahora</button> <button class="btn secondary" onclick="copyLocalToIndexedDB()">Copiar datos actuales a IndexedDB</button></div>
+</div>
+
+<div class="card no-print">
+  <div class="section-title">Google Drive — copia de seguridad</div>
+  <p class="note"><b>Importante:</b> aquí no dependemos de una cuenta de Google incrustada en el HTML. El sistema usa la carpeta local de Google Drive para escritorio. Tú eliges la carpeta una vez y Chrome autoriza al sistema a escribir las copias allí.</p>
+  <div class="toolbar">
+    <button class="btn" onclick="connectGoogleDriveFolder()">📁 Conectar carpeta de Google Drive</button>
+    <button class="btn secondary" onclick="disconnectGoogleDriveFolder()">Desconectar carpeta</button>
+    <button class="btn secondary" onclick="backupToDrive('manual')">☁️ Crear copia ahora en Drive</button>
+  </div>
+  <div class="grid" style="margin-top:12px">
+    <div><label>Copia automática después de cambios</label><select id="ms-auto-drive" onchange="setAutoDrive()"><option value="no">No</option><option value="si">Sí</option></select></div>
+    <div><label>Retención de copias fechadas</label><select id="ms-retention" onchange="setRetention()"><option value="7">7 copias</option><option value="15">15 copias</option><option value="30" selected>30 copias</option><option value="60">60 copias</option></select></div>
+  </div>
+  <p id="ms-drive-message" class="note" style="margin-top:10px">Primero conecta una carpeta de Google Drive para escritorio.</p>
+</div>
+
+<div class="card no-print">
+  <div class="section-title">Copias de seguridad y recuperación</div>
+  <p class="note">La copia contiene los datos operativos del sistema: ventas semanales, acreedores, facturas, préstamos, pagos, gastos, obligaciones y configuración de la empresa. No contiene contraseñas ni credenciales de Google.</p>
+  <div class="toolbar">
+    <button class="btn" onclick="downloadBackup('manual')">⬇️ Descargar copia de seguridad</button>
+    <label class="btn secondary" style="display:inline-block;cursor:pointer">⬆️ Restaurar copia <input type="file" id="ms-restore-file" accept="application/json,.json" style="display:none" onchange="restoreBackupFile(event)"></label>
+    <button class="btn secondary" onclick="verifyDatabaseIntegrity(true)">🔎 Verificar integridad</button>
+    <button class="btn secondary" onclick="requestPersistentStorage()">🔒 Solicitar almacenamiento persistente</button>
+  </div>
+  <div id="ms-integrity" class="formula" style="margin-top:14px">Aún no se ha ejecutado la revisión.</div>
+</div>
+
+<div class="card no-print">
+  <div class="section-title">Estadísticas del sistema</div>
+  <div class="grid">
+    <div><label>Resultados de contado</label><input id="ms-n-contado" readonly></div>
+    <div><label>Resultados de crédito</label><input id="ms-n-credito" readonly></div>
+    <div><label>Recibos de ingreso</label><input id="ms-n-recibos" readonly></div>
+    <div><label>Acreedores</label><input id="ms-n-acreedores" readonly></div>
+    <div><label>Facturas de mercancía</label><input id="ms-n-facturas" readonly></div>
+    <div><label>Préstamos</label><input id="ms-n-prestamos" readonly></div>
+    <div><label>Pagos</label><input id="ms-n-pagos" readonly></div>
+    <div><label>Gastos / obligaciones</label><input id="ms-n-gastos" readonly></div>
+  </div>
+</div>
+
+<div class="card no-print">
+  <div class="section-title">Zona de mantenimiento</div>
+  <p class="note">Estas acciones no deben utilizarse para el trabajo diario. Antes de limpiar o restablecer datos, crea una copia de seguridad.</p>
+  <button class="btn danger" onclick="confirmResetData()">⚠️ Restablecer datos operativos</button>
+</div>
+</section>
+<section id="v-empresa" class="view">
+<h1>Empresa</h1><p class="sub">Datos de Moto Repuesto Sandy y parámetros que alimentan los reportes.</p>
+<div class="card no-print"><div class="grid"><div><label>Nombre comercial</label><input id="em-nombre"></div><div><label>RNC</label><input id="em-rnc"></div><div><label>Teléfono</label><input id="em-tel"></div><div><label>Correo</label><input id="em-email"></div><div><label>Dirección</label><input id="em-dir"></div><div><label>Margen bruto estimado (%)</label><input type="number" step="0.1" id="em-margen" value="30"></div></div><div class="grid2"><div><label>Eslogan</label><input id="em-eslogan"></div><div><label>Logo</label><input type="file" id="em-logo" accept="image/*" onchange="loadLogo(event)"><img id="em-logo-preview" class="logo-preview"></div></div><button class="btn" onclick="saveEmpresa()">Guardar empresa</button></div>
+<div class="card"><div id="empresa-ficha"></div></div>
+</section>
+</main></div>
+<div id="toast" style="position:fixed;right:18px;bottom:18px;display:none;padding:10px 14px;border-radius:5px;background:#1c2430;color:#fff;z-index:20"></div>
+<div id="edit-modal" class="modal"><div class="modal-box"><div class="section-title" id="edit-title">Editar comprobante</div><div id="edit-body"></div><div class="modal-actions"><button class="btn secondary" onclick="closeEditor()">Cancelar</button><button class="btn" onclick="saveEditor()">Guardar cambios</button></div></div></div>
+<script src="js/nucleo/almacen.js"></script>
+<script src="js/nucleo/utiles.js"></script>
+<script src="js/nucleo/secuencias.js"></script>
+<script src="js/nucleo/idb.js"></script>
+<script src="js/nucleo/respaldo.js"></script>
+<script src="js/nucleo/respaldo-almacen.js"></script>
+<script src="js/dominio/ventas.js"></script>
+<script src="js/dominio/resultados.js"></script>
+<script src="js/dominio/acreedores.js"></script>
+<script src="js/dominio/prestamos.js"></script>
+<script src="js/dominio/pagos-prestamo.js"></script>
+<script src="js/dominio/obligaciones.js"></script>
+<script src="js/dominio/cxp.js"></script>
+<script src="js/dominio/cxp-reportes.js"></script>
+<script src="js/dominio/pagos-suplidor.js"></script>
+<script src="js/dominio/gastos.js"></script>
+<script src="js/dominio/nomina.js"></script>
+<script src="js/dominio/cronograma.js"></script>
+<script src="js/dominio/empresa.js"></script>
+<script src="js/ui/navegacion.js"></script>
+<script src="js/ui/editor.js"></script>
+<script src="js/ui/impresion.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

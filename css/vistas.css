@@ -1,0 +1,59 @@
+/* Vistas — CxP, reportes, captura de préstamo, mantenimiento y selector de suplidor
+ * Moto Repuesto Sandy — extraído del monolito v18 v5.
+ * Mantener el orden de este archivo: la cascada depende de él.
+ */
+
+.cxp-title-current{background:#dff2df!important;color:#246b2f!important;border-left:6px solid #2f9e44!important;padding:9px 14px!important;border-radius:5px;display:block;box-shadow:inset 0 0 0 1px #2f9e4433,0 2px 6px #00000012;transition:background .15s,color .15s,border-color .15s}
+.cxp-title-current::before{content:"✓";margin-right:8px;font-weight:700;color:#2f9e44}
+.cxp-section-anchor{scroll-margin-top:24px}
+.report-total-row{font-weight:700;border-top:2px solid #333;background:#f3efe3}
+.report-total-row td{padding-top:10px;padding-bottom:10px;background:#f3efe3}
+.report-total-row td:first-child{border-bottom-left-radius:4px}
+.report-total-row td:last-child{border-bottom-right-radius:4px}
+.report-summary{display:flex;gap:28px;flex-wrap:wrap;margin:12px 0 0}
+.report-summary b{display:block;font-size:1.05rem}
+.report-groups{display:flex;flex-direction:column;gap:12px}
+.report-third-party{margin:0;padding:14px}
+.report-third-party h3{font:600 1rem Georgia,serif}
+.report-third-party small{color:var(--soft);font:400 .8rem -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+/* Indicador de sección activa en CxP */
+#cxp-subnav a{position:relative;display:block;padding:9px 14px 9px 20px;border-radius:4px;transition:background .15s ease,color .15s ease;}
+#cxp-subnav a.cxp-current{color:#f2f2f2;font-weight:700;}
+/* El indicador verde vive dentro del módulo, sobre el título de la sección activa. */
+.cxp-title-current{background:rgba(47,158,68,.18)!important;color:#1f7a35!important;font-weight:700!important;border-left:5px solid #2f9e44;padding:9px 12px!important;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(47,158,68,.10);}
+.phase-head{display:flex;align-items:center;gap:9px;margin:18px 0 10px;padding-top:4px;border-top:1px solid var(--line)}
+.phase-badge{display:inline-flex;width:25px;height:25px;align-items:center;justify-content:center;border-radius:50%;background:#eef2f5;color:var(--ink);font-weight:700;font-size:.78rem}
+.choice-row{display:flex;gap:18px;flex-wrap:wrap;margin:7px 0 10px}
+.choice{display:flex;align-items:center;gap:7px;color:var(--ink);font-size:.82rem;margin:0}
+.choice input{width:auto}
+.phase-panel{background:#faf8f1;border:1px solid var(--line);border-radius:6px;padding:12px;margin:8px 0 14px}
+.panel-title{font:600 .9rem Georgia,serif;margin-bottom:4px}
+.table-scroll{overflow-x:auto}
+.capture-table{min-width:780px}
+.capture-table input{min-width:95px;padding:6px}
+.capture-table .mini{min-width:62px;width:62px}
+.capture-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:10px 0;background:#f3efe3;border:1px solid var(--line);border-radius:6px;padding:10px}
+.capture-summary span{font-size:.72rem;color:var(--soft)}
+.capture-summary b{display:block;color:var(--ink);font-size:1rem;margin-top:3px}
+.form-actions{display:flex;flex-wrap:wrap}
+.row-remove{padding:5px 8px!important;margin:0!important}
+..maintenance-ok{color:var(--green)}
+.maintenance-warn{color:var(--yellow)}
+.maintenance-danger{color:var(--red)}
+/* Selector de suplidor con búsqueda por código/nombre y F1 */
+.supplier-picker{display:flex;gap:6px;align-items:stretch;position:relative}
+.supplier-picker input[type=text]{min-width:230px}
+.supplier-f1-btn{padding:8px 10px}
+.supplier-suggestions{position:absolute;z-index:1000;background:#fff;border:1px solid #cfcfcf;border-radius:6px;box-shadow:0 8px 20px rgba(0,0,0,.12);max-height:240px;overflow:auto;min-width:320px}
+.supplier-suggestions button{display:block;width:100%;text-align:left;border:0;background:#fff;padding:9px 12px;cursor:pointer}
+.supplier-suggestions button:hover{background:#eef7ef}
+.supplier-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px}
+.supplier-modal{background:#fff;width:min(700px,95vw);max-height:80vh;border-radius:10px;box-shadow:0 20px 50px rgba(0,0,0,.25);overflow:hidden}
+.supplier-modal-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #ddd}
+.supplier-modal-body{padding:14px 18px;overflow:auto;max-height:62vh}
+.supplier-list-btn{display:flex!important;justify-content:space-between;gap:16px;width:100%;padding:10px 12px!important;border:0;border-bottom:1px solid #eee;background:#fff;cursor:pointer;text-align:left}
+.supplier-list-btn:hover{background:#eef7ef}
+.supplier-code{font-weight:700;min-width:90px}
+.supplier-name{flex:1}
+.supplier-modal-search{width:100%;margin-bottom:10px}
+.supplier-suggestions button.active{background:#e7f4ea;color:#176b2c;outline:none;}

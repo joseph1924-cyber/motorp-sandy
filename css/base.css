@@ -1,0 +1,35 @@
+/* Base — variables, reset, tipografía, layout, navegación lateral y responsive
+ * Moto Repuesto Sandy — extraído del monolito v18 v5.
+ * Mantener el orden de este archivo: la cascada depende de él.
+ */
+
+:root{--paper:#f7f5ef;--ink:#1c2430;--soft:#5c6675;--gold:#a8781f;--line:#dad4c4;--card:#fff;--green:#2f6f4e;--red:#a83232;--yellow:#b7791f;--blue:#35658d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.app{display:flex;min-height:100vh}
+.side{width:230px;flex:0 0 230px;background:var(--ink);color:#eee7d8;padding:22px 0;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{font:700 1.1rem Georgia,serif;padding:0 20px 18px;border-bottom:1px solid #ffffff18;margin-bottom:10px}
+.brand small{display:block;color:var(--gold);font:600 .68rem -apple-system,sans-serif;margin-top:5px}
+.nav button{display:block;width:100%;border:0;background:none;color:#c9c3b4;text-align:left;padding:10px 18px;border-left:3px solid transparent;cursor:pointer}
+.nav button:hover,.nav button.active{color:#fff;background:#ffffff0d;border-left-color:var(--gold)}
+.nav button[data-v="cxp"]{position:relative;min-height:48px;font-weight:700;padding-right:52px}
+.nav-arrow{position:absolute;right:14px;top:8px;float:none;display:inline-flex;width:34px;height:34px;align-items:center;justify-content:center;margin-top:0;font-size:1.8rem;line-height:1;opacity:1;color:#eee7d8;font-weight:700;border-radius:4px;transition:transform .15s,background .15s}
+.nav-arrow:hover{background:#ffffff18}
+.nav-arrow.open{transform:rotate(90deg)}
+.nav-sub{display:none;background:#141b24;border-left:3px solid var(--gold);padding:4px 0 6px}
+.nav-sub.open{display:block}
+.nav-sub a{display:block;position:relative;color:#b7bec8;text-decoration:none;font-size:.84rem;padding:10px 12px 10px 42px;border-left:2px solid transparent;transition:background .15s,color .15s,border-color .15s}
+.nav-sub a:hover{color:#fff;background:#ffffff0a;border-left-color:var(--gold)}
+.nav-sub a.active{color:#b7bec8;background:transparent;border-left-color:transparent;font-weight:400}
+.nav-sub a.active::before{content:none}
+.nav .section{padding:13px 20px 5px;color:#8f98a6;font-size:.65rem;text-transform:uppercase;letter-spacing:.12em}
+.main{flex:1;min-width:0;width:calc(100% - 230px);max-width:none;padding:28px 34px;overflow-x:hidden}
+.view{display:none}
+.view.active{display:block}
+h1{font:400 1.65rem Georgia,serif;margin:0 0 5px}
+.sub{color:var(--soft);margin:0 0 18px}
+@media(max-width:850px){.side{width:190px;flex-basis:190px}.main{padding:20px}.grid2{grid-template-columns:1fr}}
+/* Estabilidad del menú raíz: el lateral tiene su propio scroll y no altera el ancho del contenido. */
+.side{position:fixed;left:0;top:0;bottom:0;height:100vh;overflow-y:auto;overflow-x:hidden;z-index:20;}
+.main{margin-left:230px;width:calc(100% - 230px);min-width:0;overflow-x:hidden;}
+@media(max-width:850px){.side{width:190px}.main{margin-left:190px;width:calc(100% - 190px);}}

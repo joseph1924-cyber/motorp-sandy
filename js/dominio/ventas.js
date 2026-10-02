@@ -1,0 +1,14 @@
+/* Ventas — ventas de contado, crédito y recibos de ingreso
+ * Moto Repuesto Sandy — módulo extraído del monolito v18 v5.
+ * Se carga como script clásico: comparte el scope global con el resto de módulos.
+ */
+
+function gestionFor(kind,a,b){const arr=kind==='contado'?db.gestionContado:kind==='credito'?db.gestionCredito:db.gestionRecibos;return arr.filter(x=>inRange(x.semanaFin,a,b)).reduce((s,x)=>s+Number(x.monto||0),0)}
+
+function scoreGestion(a,b){const c=gestionFor('contado',a,b),cr=gestionFor('credito',a,b),ri=gestionFor('recibos',a,b);return {c,cr,ri,total:c+cr,score:(c+cr)?ri/(c+cr)*100:0}}
+
+function addGestion(kind){const prefix=kind==='contado'?'vc':kind==='credito'?'cr':'ri',fecha=$(prefix+'-fecha').value,monto=+(kind==='recibos'?$('ri-monto').value:$(''+prefix+'-total').value),nota=$(prefix+'-nota').value.trim();if(!fecha)return notify('Indica la fecha de cierre de la semana');if(monto<0)return notify('El monto no puede ser negativo');const arr=kind==='contado'?db.gestionContado:kind==='credito'?db.gestionCredito:db.gestionRecibos,existente=arr.find(x=>x.semanaFin===fecha);if(existente){existente.monto=monto;existente.nota=nota;existente.actualizado=today();notify('Resultado semanal actualizado')}else arr.push({id:uid(),codigo:code(kind==='contado'?'GC':kind==='credito'?'GCR':'RIW',arr),semanaFin:fecha,monto,nota,creado:today()});save();$(kind==='recibos'?'ri-monto':prefix+'-total').value='';$(prefix+'-nota').value='';renderGestion(kind);renderDashboard();if(!existente)notify('Resultado semanal guardado')}
+
+function renderGestion(kind){const prefix=kind==='contado'?'vc':kind==='credito'?'cr':'ri',a=$(prefix+'-desde').value,b=$(prefix+'-hasta').value,arr=kind==='contado'?db.gestionContado:kind==='credito'?db.gestionCredito:db.gestionRecibos,tb=$(kind==='contado'?'tbl-contado':kind==='credito'?'tbl-credito':'tbl-recibos'),list=[...arr].filter(x=>inRange(x.semanaFin,a,b)).sort((x,y)=>y.semanaFin.localeCompare(x.semanaFin));tb.innerHTML=list.length?list.map(x=>`<tr><td>${fmtDate(x.semanaFin)}</td><td class="r">${money(x.monto)}</td><td>${x.nota||'—'}</td><td class="no-print action-cell"><div class="action-buttons"><button class="btn secondary" onclick="openEditor('gestion','${x.id}','${kind}')">Editar</button><button class="btn secondary" onclick="printRecord('gestion','${x.id}','${kind}')">Imprimir</button><button class="btn danger" onclick="delGestion('${kind}','${x.id}')">Eliminar</button></div></td></tr>`).join(''):`<tr><td colspan="4" class="empty">Sin resultados semanales.</td></tr>`;$(kind==='contado'?'vc-sum':kind==='credito'?'cr-sum':'ri-sum').textContent=money(list.reduce((s,x)=>s+Number(x.monto||0),0))}
+
+function delGestion(kind,id){if(!confirm('¿Eliminar este resultado semanal?'))return;const key=kind==='contado'?'gestionContado':kind==='credito'?'gestionCredito':'gestionRecibos';db[key]=db[key].filter(x=>x.id!==id);save();renderGestion(kind);renderDashboard()}
