@@ -44,7 +44,12 @@
 -- ───────────────────────────────────────────────────────────────────────────────
 create table if not exists documentos (
   id             uuid        primary key default gen_random_uuid(),
-  user_id        uuid        not null references auth.users(id) on delete cascade,
+
+  -- `default auth.uid()` es lo importante: el SERVIDOR decide a qué pertenece el
+  -- documento, nunca el cliente. Así ni siquiera una app con la llave anon podría
+  -- escribir en nombre de otro usuario, y la política de abajo pasa a ser una
+  -- segunda barrera en vez de la única.
+  user_id        uuid        not null default auth.uid() references auth.users(id) on delete cascade,
 
   -- El estado completo de la app. Un solo documento por usuario, garantizado abajo.
   data           jsonb       not null,
@@ -60,6 +65,12 @@ create table if not exists documentos (
   -- el arranque fallaría. Por eso el verificador de RLS lo comprueba.
   constraint documentos_unico_por_usuario unique (user_id)
 );
+
+-- `create table if not exists` no toca una tabla que ya existe: si alguien corrige
+-- este archivo y lo reaplica sobre una tabla creada antes, el cambio de arriba NO se
+-- aplicaría. Por eso el default se reaffirma aquí de forma explícita, que sí corre
+-- siempre. Es idempotente.
+alter table documentos alter column user_id set default auth.uid();
 
 comment on table documentos is
   'Estado completo de Moto Repuesto Sandy. Un documento JSONB por usuario. Las escrituras son atómicas porque la app escribe siempre el estado entero en una sola operación.';

@@ -68,21 +68,62 @@ El script **borra al final el documento de prueba que crea**, así que no deja b
 
 ## Qué comprueba
 
+El script **borra al final el documento de prueba que crea**, así que no deja basura.
+
+**Antes de tocar la red**
+
 | Prueba | Qué demuestra si pasa |
 |---|---|
-| `SELECT` sin sesión devuelve 0 filas | Nadie puede leer tu contabilidad sin tu contraseña |
-| `INSERT` sin sesión → 401/403 | Nadie puede escribir datos falsos |
-| `DELETE` sin sesión → 401/403 | Nadie puede borrar tu información |
-| El `INSERT` fallido no dejó filas | El bloqueo ocurrió antes de escribir |
+| Las cuatro variables presentes | El archivo está bien escrito |
+| La llave es de rol `anon` | Se decodifica el JWT y se lee su campo `role`. Una `service_role` se detecta y **aborta el script** |
+| `.gitignore` cubre los `.env` | Las credenciales no se suben al repositorio |
+| No hay llaves `service_role` en el repo | Se buscan secretos reales (`sb_secret_…`, JWT con `role: service_role`), no la palabra suelta, para no saltar con la documentación que la nombra |
+
+**Sin sesión, como visitante con la URL**
+
+| Prueba | Qué demuestra si pasa |
+|---|---|
+| `SELECT` devuelve 0 filas | Nadie lee tu contabilidad sin tu contraseña |
+| `INSERT` bloqueado con 4xx | Nadie escribe datos falsos |
+| `DELETE` no afecta ninguna fila | Nadie borra tu información |
+| `UPDATE` no afecta ninguna fila | Nadie modifica tu información |
+| Ninguna operación dejó datos | Los bloqueos ocurren antes de escribir, no después |
+
+> `INSERT` da un error, pero `UPDATE` y `DELETE` no: RLS simplemente hace que la fila no
+> sea visible, así que la operación afecta 0 filas y responde con éxito. Por eso las
+> pruebas exigen "0 filas afectadas" y no un 403.
+
+**Con tu sesión**
+
+| Prueba | Qué demuestra si pasa |
+|---|---|
 | Sesión iniciada | Tu usuario existe y la contraseña es correcta |
-| `INSERT` con sesión → `rev=1` | Tu usuario sí puede escribir su documento |
+| Limpieza previa | No quedan restos de pruebas anteriores |
+| `INSERT` **sin** `user_id` → `rev=1` | El servidor rellena el propietario solo |
+| El `user_id` asignado es el de tu sesión | El default es el correcto |
+| `INSERT` con un `user_id` **ajeno** → rechazado | **No se puede escribir en el documento de otro** |
 | `PATCH` con `rev` correcto → avanza | La actualización funciona |
 | `PATCH` con `rev` obsoleto → 0 filas | **Dos dispositivos sin conexión no se pisan** |
 | El documento conserva su valor tras el conflicto | No se pierden escrituras |
-| `.gitignore` cubre los `.env` | Las credenciales no se suben al repositorio |
-| No hay `service_role` en el repo | La llave que salta RLS no está filtrada |
 
 Si algo falla, el script dice qué hacer. Salida `0` = todo correcto.
+
+## Por qué `user_id` tiene `default auth.uid()`
+
+La columna es `user_id uuid not null default auth.uid()`. Ese default es lo que hace
+seguro el conjunto: **el servidor decide a qué pertenece cada documento**, nunca el
+cliente. La app nunca manda `user_id`, así que ni una app con la llave `anon` podría
+escribir en tu nombre, y la política RLS pasa a ser una segunda barrera en vez de la
+única.
+
+Si insertas sin este default, la columna queda en `NULL`, la comparación
+`auth.uid() = user_id` se resuelve a `NULL` y Postgres rechaza la fila con:
+
+```
+42501  new row violates row-level security policy for table "documentos"
+```
+
+Que es justo el error que aparecía antes de añadirlo.
 
 ---
 
