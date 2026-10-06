@@ -14,6 +14,9 @@ const MODULOS = [
   'js/nucleo/almacen.js',
   'js/nucleo/utiles.js',
   'js/nucleo/secuencias.js',
+  'js/nucleo/config-supabase.js',
+  'js/nucleo/supabase.js',
+  'js/nucleo/nube.js',
   'js/nucleo/idb.js',
   'js/nucleo/respaldo.js',
   'js/nucleo/respaldo-almacen.js',
@@ -33,6 +36,7 @@ const MODULOS = [
   'js/ui/navegacion.js',
   'js/ui/editor.js',
   'js/ui/impresion.js',
+  'js/ui/nube-acceso.js',
   'js/main.js',
 ];
 
@@ -139,6 +143,9 @@ function crearContexto(extra = {}) {
     URL: { createObjectURL: () => 'blob:x', revokeObjectURL: () => {} },
     FormData: class { constructor() { this.d = {}; } append(k, v) { this.d[k] = v; } },
     crypto: { randomUUID: () => 'id-fijo-0000-0000-0000-000000000000' },
+    /* atob existe siempre en un navegador y sbExpiracion() lo usa para leer el exp del
+     * token. Se acepta base64url porque los JWT lo usan. */
+    atob: (s) => Buffer.from(String(s).replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('binary'),
     Intl,
     __avisos: avisos,
     __errores: errores,
@@ -149,6 +156,19 @@ function crearContexto(extra = {}) {
   ctx.window = ctx;
   ctx.globalThis = ctx;
   ctx.self = ctx;
+  /* window en un navegador registra oyentes de eventos. El motor de sincronización se
+   * engancha al evento `online` para reintentar la subida al recuperar la red, así que
+   * el simulador necesita la forma, aunque aquí no se dispare ningún evento. */
+  ctx.__oyentes = new Map();
+  ctx.addEventListener = (tipo, fn) => {
+    if (!ctx.__oyentes.has(tipo)) ctx.__oyentes.set(tipo, []);
+    ctx.__oyentes.get(tipo).push(fn);
+  };
+  ctx.removeEventListener = (tipo, fn) => {
+    const l = ctx.__oyentes.get(tipo);
+    if (l) ctx.__oyentes.set(tipo, l.filter((f) => f !== fn));
+  };
+  ctx.dispatchEvent = (ev) => (ctx.__oyentes.get(ev?.type) || []).forEach((f) => f(ev));
   const vmCtx = vm.createContext(ctx);
   /* Atajo para sembrar datos: los tests fijan tablas completas sin pasar por JSON. */
   ctx.ponerDatos = (parcial) => {
@@ -191,11 +211,18 @@ function dbDe(ctx) {
   return vm.runInContext('db', ctx);
 }
 
+/* Lee una expresión en el contexto. `let` y `const` de los módulos viven en el ámbito
+ * léxico del vm y no son propiedades del sandbox, así que no hay otra forma de verlos:
+ * es lo que permite comprobar el estado del motor de sincronización. */
+function leer(ctx, expresion) {
+  return vm.runInContext(expresion, ctx);
+}
+
 function ponerDb(ctx, valor) {
   vm.runInContext(`db = ${JSON.stringify(valor)}`, ctx);
   return dbDe(ctx);
 }
 
 module.exports = {
-  RAIZ, MODULOS, El, crearContexto, cargar, ordenDeHtml, textoDe, ultimoAviso, dbDe, ponerDb,
+  RAIZ, MODULOS, El, crearContexto, cargar, ordenDeHtml, textoDe, ultimoAviso, dbDe, ponerDb, leer,
 };

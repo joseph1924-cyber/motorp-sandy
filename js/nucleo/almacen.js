@@ -22,11 +22,11 @@ function persistirLocal(){
   }
 }
 
-function save(){persistirLocal();idbPutState().catch(()=>{});scheduleDriveBackup();}
+function save(){persistirLocal();idbPutState().catch(()=>{});scheduleDriveBackup();nubeMarcarSucio();}
 
 /* ==================== MANTENIMIENTO Y SEGURIDAD ==================== */
 
-function saveWithoutDrive(){persistirLocal();idbPutState().catch(()=>{})}
+function saveWithoutDrive(){persistirLocal();idbPutState().catch(()=>{});nubeMarcarSucio()}
 
 function databaseStats(){const textData=JSON.stringify(db),bytes=new Blob([textData]).size;return {bytes,contado:db.gestionContado.length,credito:db.gestionCredito.length,recibos:db.gestionRecibos.length,acreedores:db.acreedores.length,facturas:db.facturasSuplidor.length,prestamos:db.prestamos.length,pagos:db.pagosSuplidor.length+db.pagosObligaciones.length+db.pagosPrestamos.length,gastos:db.gastos.length+db.obligaciones.length}}
 
@@ -76,7 +76,13 @@ function reconciliarPagosPrestamoCalendario(){
   return changed;
 }
 
-function load(){try{const x=localStorage.getItem(KEY);if(x)db=Object.assign(db,JSON.parse(x));}catch(e){};db.seriales=Object.assign({},db.seriales||{});db.empresa=Object.assign({nombre:'Moto Repuesto Sandy',margen:30},db.empresa||{});
+/* Lectura de localStorage + normalización. La normalización va aparte porque al
+ * arrancar puede haber dos fuentes: localStorage y el documento de Supabase. Ambas
+ * dejan `db` en un estado válido solo pasando por aquí, y duplicar esas reglas de
+ * saneado en el camino de la nube sería garantir que algún día se desincronizan. */
+function load(){try{const x=localStorage.getItem(KEY);if(x)db=Object.assign(db,JSON.parse(x));}catch(e){};normalizarDb();}
+
+function normalizarDb(){db.seriales=Object.assign({},db.seriales||{});db.empresa=Object.assign({nombre:'Moto Repuesto Sandy',margen:30},db.empresa||{});
   db.prestamos.forEach(p=>{if(!Array.isArray(p.cuotas))p.cuotas=[];p.cuotas.forEach(q=>{if(!q.codigo)q.codigo=code('CQP',db.prestamos.flatMap(z=>z.cuotas||[]));});if(p.modalidad==null)p.modalidad='Cuota fija — capital e interés';if(p.tasaMensual==null)p.tasaMensual=0;if(p.tasaAnual==null)p.tasaAnual=0;if(p.seguroPorCuota==null)p.seguroPorCuota=0;if(!Array.isArray(p.historialPrevio))p.historialPrevio=[];if(p.tieneAmortizacion==null)p.tieneAmortizacion=false;if(p.situacionInicial==null)p.situacionInicial=p.pagosIniciales>0?'existente':'nuevo';});
 ['gestionContado','gestionCredito','gestionRecibos','suplidores','facturasSuplidor','pagosSuplidor','gastos','empleados','nominas','acreedores','obligaciones','prestamos','pagosObligaciones','pagosPrestamos'].forEach(k=>{if(!Array.isArray(db[k]))db[k]=[]});
 // Migración: los suplidores existentes pasan a formar parte del catálogo general de acreedores.

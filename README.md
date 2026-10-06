@@ -15,9 +15,12 @@ Ambas abren directamente con doble clic desde el disco (`file://`). No hay servi
 ## Comandos
 
 ```bash
-npm run verificar   # compara el código separado contra el monolito original
-npm run build       # genera dist/moto-repuesto-sandy.html
-npm run check       # verificar + build
+npm test                # pruebas automáticas (49)
+npm run verificar       # compara el código separado contra el monolito original
+npm run build           # genera dist/moto-repuesto-sandy.html
+npm run check           # test + verificar + build
+npm run supabase:verificar   # comprueba RLS y control de concurrencia contra el proyecto real
+npm run supabase:config      # regenera js/nucleo/config-supabase.js desde supabase/.env.local
 ```
 
 `npm run build` no necesita instalar nada: es un script de Node sin dependencias.
@@ -41,6 +44,9 @@ js/
     respaldo.js                exportar / importar / restaurar respaldos
     respaldo-almacen.js        respaldo de Diskette, Google Drive, instalación PWA
     secuencias.js              numeración de comprobantes GO, PPR y CQP
+    supabase.js                sesión y acceso a la API por REST (sin SDK)
+    nube.js                    motor de sincronización: subida, conflictos y estados
+    config-supabase.js         URL, anon key y tabla (generado; no editar a mano)
   dominio/                     reglas de negocio
     ventas.js                  ventas de contado y crédito
     gastos.js                  gastos
@@ -58,8 +64,15 @@ js/
     navegacion.js              cambio de vistas, submenú CxP, atajos
     editor.js                  modal de edición de registros
     impresion.js               impresión de comprobantes, recibos y reportes
-  main.js                      arranque: carga datos y monta la interfaz
+    nube-acceso.js             pantalla de entrada y cierre de sesión
+  main.js                      arranque: monta la interfaz y luego conecta con la nube
 original/                      monolito v18 v5 intacto, usado como referencia
+original/cambios-faseN.js      manifiesto de cambios posteriores, uno por fase
+supabase/                      esquema, políticas RLS y verificador del proyecto real
+  schema.sql                   tabla documento, rev, trigger y RLS
+  verificar-rls.js             pruebas de seguridad y concurrencia
+  generar-config.js            escribe js/nucleo/config-supabase.js
+test/                          pruebas automáticas con node:test
 dist/                          archivo único generado
 ```
 
@@ -79,28 +92,56 @@ si algo no cuadra:
 - **CSS**: mismo número de reglas, ninguna perdida, ninguna inventada, y orden relativo
   preservado dentro de cada archivo.
 - **JavaScript**: comparación por multiconjunto de líneas, así que detecta cualquier línea
-  perdida, alterada o duplicada. Además compara las 203 declaraciones y las 183 funciones
-  de nivel superior.
+  perdida, alterada o duplicada. Además compara todas las declaraciones y funciones de
+  nivel superior.
 - **HTML**: el `<body>` debe quedar intacto y el script de arranque debe ser el último.
+- **Manifiestos**: cada cambio posterior al monolito está declarado en
+  `original/cambios-faseN.js` con su archivo y su motivo. Si falta una declaración, o una
+  línea cambia sin quedar registrada, la verificación falla.
 
-La única diferencia esperada es una llave `}`: la IIFE `recoverLoanDataFromIndexedDB`, que
-estaba anidada dentro de `restoreBackupFile`, se extrajo a `js/nucleo/idb.js` como función
-declarada para poder colocarla en su propio módulo. La llamada se dejó sin `await`, igual
-que en el original.
+La única diferencia esperada entre el monolito y el código es una llave `}`: la IIFE
+`recoverLoanDataFromIndexedDB`, que estaba anidada dentro de `restoreBackupFile`, se
+extrajo a `js/nucleo/idb.js` como función declarada para poder colocarla en su propio
+módulo.
 
-## Bug preexistente conocido
+## Defecto del v18 v5 que sí se corrigió
 
-`refresh()` llama a `fillCxpTerceros()`, una función que **no existe** en el código: solo
-aparece esa llamada, nunca su definición. Es un defecto del v18 v5, no del refactor, y se
-reproduce igual en el archivo original. Se deja tal cual para no alterar el comportamiento
-de la aplicación.
+`refresh()` llamaba a `fillCxpTerceros()`, una función que **no existía**: solo estaba la
+llamada, nunca la definición, así que la vista de cuentas por pagar se quedaba a medio
+dibujar. Es un defecto del original, no del refactor, y se corrigió definiéndola en
+`js/dominio/cxp.js` y dejándola registrada en el manifiesto.
 
-## Datos
+## Datos y sincronización
 
-La información se guarda en el navegador:
+Hay dos capas, y la nube es la que manda:
+
+- **Supabase** es la fuente de verdad. Cada usuario tiene un único documento JSONB en la
+  tabla `documentos`, protegido por RLS para que solo su sesión pueda leerlo o escribirlo.
+- **`localStorage`** es la caché de trabajo: la app dibuja siempre desde aquí, así que
+  cargar, editar e imprimir funciona igual sin conexión.
+
+Al entrar, la app compara lo que hay en la nube con lo que hay en el dispositivo. Si el
+documento remoto ha cambiado desde la última vez que este equipo sincronizó, aparece un
+**conflicto** y se pregunta cuál versión gana; nunca se sobrescribe una en silencio. Un
+cambio guardado sin conexión se sube solo, agrupado 1,5 s después, y también en cuanto
+vuelve la red.
+
+Los respaldos siguen siendo independientes de esto: exportar genera un archivo que se puede
+guardar donde sea, y Drive es la carpeta local de Drive for Desktop, no una API.
+
+Claves en el navegador:
 
 - `localStorage` → `moto_repuesto_sandy_finanzas_v1` (datos), `..._data_test_v1` (pruebas)
 - IndexedDB → `moto_repuesto_sandy_drive_v1` (copias de seguridad)
 
-No hay servidor ni sincronización entre equipos. Cada máquina tiene sus propios datos,
-así que para compartir hay que usar **Exportar respaldo** e **Importar respaldo**.
+## Configurar la nube
+
+1. Crear el proyecto en Supabase y ejecutar `supabase/schema.sql` en el editor SQL.
+2. Poner la URL, la anon key y la contraseña de la cuenta de servicio en
+   `supabase/.env.local` (está en `.gitignore`; no se sube).
+3. `npm run supabase:verificar` para comprobar que las políticas bloquean lo que deben.
+4. `npm run supabase:config` para generar `js/nucleo/config-supabase.js`.
+
+La anon key es pública por diseño: la seguridad la ponen las políticas RLS, que el
+verificador comprueba. La contraseña de la cuenta de servicio solo la usan las pruebas y
+no debe estar nunca en el código de la aplicación.

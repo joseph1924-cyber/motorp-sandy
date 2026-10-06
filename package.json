@@ -9,7 +9,8 @@
     "build": "node build.js",
     "verificar": "node build.js --verificar",
     "check": "npm test && node build.js --verificar && node build.js",
-    "supabase:verificar": "node supabase/verificar-rls.js"
+    "supabase:verificar": "node supabase/verificar-rls.js",
+    "supabase:config": "node supabase/generar-config.js"
   },
   "engines": {
     "node": ">=18"

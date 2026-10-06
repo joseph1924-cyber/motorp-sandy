@@ -138,9 +138,15 @@ function comparar(mapaA, mapaB) {
   return { faltan, sobran };
 }
 
-/* Los cambios deliberados de la Fase 0 están declarados en original/cambios-fase0.js.
- * Verificar que ese manifiesto sea fiel a sí mismo evita que quede desactualizado. */
-const MANIFIESTO = require(path.join(RAIZ, 'original', 'cambios-fase0.js')).cambios;
+/* Los cambios deliberados de cada fase están declarados en original/cambios-faseN.js.
+ * Verificar que esos manifiestos sean fieles a sí mismos evita que queden desactualizados:
+ * si una fase posterior toca código que otra ya había cambiado, el control sigue comparando
+ * contra el ORIGINAL, así que la fase nueva declara solo su propio delta. */
+const DIR_MANIFIESTOS = path.join(RAIZ, 'original');
+const MANIFIESTO = fs.readdirSync(DIR_MANIFIESTOS)
+  .filter((f) => /^cambios-fase\d+\.js$/.test(f))
+  .sort()
+  .flatMap((f) => require(path.join(DIR_MANIFIESTOS, f)).cambios);
 
 function verificarManifiesto(ok) {
   console.log('\nMANIFIESTO DE CAMBIOS INTENCIONALES');
@@ -179,17 +185,34 @@ function verificar() {
   const cssNuevo = css.flatMap((ruta) =>
     reglasCss(fs.readFileSync(path.join(RAIZ, ruta), 'utf8').replace(/^\s*\/\*[\s\S]*?\*\/\s*/, ''))
   );
-  const difCss = comparar(multiconjunto(cssOriginal), multiconjunto(cssNuevo));
-  ok('mismo número de reglas', cssOriginal.length === cssNuevo.length,
-    `original ${cssOriginal.length} · nuevo ${cssNuevo.length}`);
-  ok('ninguna regla perdida', difCss.faltan.length === 0);
-  ok('ninguna regla inventada', difCss.sobran.length === 0);
+  /* El CSS admite los mismos cambios deliberados que el JS: lo que una fase quita del
+   * original y lo que agrega se resta de los dos lados antes de comparar. Sin esto, añadir
+   * una regla nueva (el aviso de conflicto, la capa de acceso) se lee como «regla inventada». */
+  const cambiosCss = MANIFIESTO.filter((c) => c.archivo.endsWith('.css'));
+  const quitaCss = cambiosCss.flatMap((c) => c.quita);
+  const agregaCss = cambiosCss.flatMap((c) => c.agrega);
+  const setCssOrig = multiconjunto(cssOriginal);
+  const setCssNuevo = multiconjunto(cssNuevo);
+  const difCss = comparar(restar(setCssOrig, quitaCss), restar(setCssNuevo, agregaCss));
+  ok('mismo número de reglas', cssOriginal.length - quitaCss.length === cssNuevo.length - agregaCss.length,
+    `original ${cssOriginal.length} - ${quitaCss.length} · nuevo ${cssNuevo.length} - ${agregaCss.length}`);
+  ok('el manifiesto CSS sigue correspondiendo al original',
+    quitaCss.filter((l) => sinEspacios(l) && !setCssOrig.get(sinEspacios(l))).length === 0);
+  ok('el manifiesto CSS sigue correspondiendo al código actual',
+    agregaCss.filter((l) => sinEspacios(l) && !setCssNuevo.get(sinEspacios(l))).length === 0);
+  ok('ninguna regla perdida', difCss.faltan.length === 0,
+    difCss.faltan.slice(0, 2).map(([k]) => k.slice(0, 60)).join(' | '));
+  ok('ninguna regla inventada', difCss.sobran.length === 0,
+    difCss.sobran.slice(0, 2).map(([k]) => k.slice(0, 60)).join(' | '));
+  /* Solo se mira el orden de las reglas que ya existían: las nuevas no tienen posición
+   * de referencia, y exigírsela las volvería a marcar como desordenadas. */
   let ordenInterno = true;
   css.forEach((ruta) => {
     const rs = reglasCss(fs.readFileSync(path.join(RAIZ, ruta), 'utf8').replace(/^\s*\/\*[\s\S]*?\*\/\s*/, ''));
     let prev = -1;
     for (const r of rs) {
       const idx = cssOriginal.findIndex((x) => sinEspacios(x) === sinEspacios(r));
+      if (idx < 0) continue;
       if (idx <= prev) { ordenInterno = false; break; }
       prev = idx;
     }
@@ -221,11 +244,28 @@ function verificar() {
   // nuevo. Si el manifiesto queda viejo, falla aquí en vez de dar un falso verde.
   const quitaJs = MANIFIESTO.filter((c) => c.archivo.endsWith('.js')).flatMap((c) => c.quita);
   const agregaJs = MANIFIESTO.filter((c) => c.archivo.endsWith('.js')).flatMap((c) => c.agrega);
+  /* Cuando una fase vuelve a tocar una linea que otra fase ya habia agregado, la linea vieja
+   * sale del codigo pero su declaracion sigue siendo cierta: se declara que fue SUSTITUIDA.
+   * Sin esto el control la marcaria como declarada y no encontrada. Cada linea superada tiene
+   * que estar declarada antes, para que el campo no sirva de puerta trasera. */
+  const declaradasAntes = new Set();
+  const superadas = [];
+  const superadasSinOrigen = [];
+  for (const c of MANIFIESTO) {
+    for (const s of c.sustituye || []) {
+      if (!declaradasAntes.has(sinEspacios(s))) superadasSinOrigen.push(s);
+      superadas.push(s);
+    }
+    for (const a of c.agrega || []) declaradasAntes.add(sinEspacios(a));
+  }
+  ok('toda linea superada estaba declarada antes', superadasSinOrigen.length === 0,
+    superadasSinOrigen.slice(0, 2).map((l) => l.slice(0, 60)).join(' | '));
+  const setSuperadas = new Set(superadas.map(sinEspacios));
   const setOriginal = multiconjunto(lineas);
   const setNuevo = multiconjunto(lineasNuevas);
 
 const quitaAusente = quitaJs.filter((l) => sinEspacios(l) && !setOriginal.get(sinEspacios(l)));
-  const agregaAusente = agregaJs.filter((l) => sinEspacios(l) && !setNuevo.get(sinEspacios(l)));
+  const agregaAusente = agregaJs.filter((l) => sinEspacios(l) && !setNuevo.get(sinEspacios(l)) && !setSuperadas.has(sinEspacios(l)));
   ok('el manifiesto sigue correspondiendo al original', quitaAusente.length === 0,
     quitaAusente.slice(0, 2).map((l) => l.slice(0, 60)).join(' | '));
   ok('el manifiesto sigue correspondiendo al código actual', agregaAusente.length === 0,
@@ -292,7 +332,15 @@ const quitaAusente = quitaJs.filter((l) => sinEspacios(l) && !setOriginal.get(si
     }
   }
   ok('cuerpo del documento intacto salvo cambios declarados', htmlAplicado === cuerpoNuevo);
-  ok('todo cambio de HTML está registrado en el manifiesto', cambiosHtml.length === MANIFIESTO.filter((c) => !c.archivo.endsWith('.js')).length);
+  /* Este control solo sirve si cada cambio no-JS lo verifica alguien: el del cuerpo del
+   * documento para el HTML, el del multiconjunto de reglas para el CSS. Una entrada de otro
+   * tipo pasaria desapercibida. */
+  const fueraDeVerificacion = MANIFIESTO.filter((c) => !c.archivo.endsWith('.js') &&
+    !c.archivo.endsWith('.html') && !c.archivo.endsWith('.css'));
+  ok('todo cambio de HTML y CSS está registrado en el manifiesto',
+    fueraDeVerificacion.length === 0 && cambiosHtml.every((c) => c.quita.length || c.agrega.length) &&
+      cambiosCss.every((c) => c.quita.length || c.agrega.length),
+    fueraDeVerificacion.map((c) => c.archivo).join(', ') || `html ${cambiosHtml.length} · css ${cambiosCss.length}`);
   ok('el script de arranque va al final', /<script src="js\/main\.js"><\/script>/.test(htmlActual));
 
   console.log(fallos === 0 ? '\nVERIFICACIÓN CORRECTA ✅' : `\n${fallos} VERIFICACIONES FALLIDAS ❌`);

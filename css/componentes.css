@@ -64,3 +64,10 @@ td{padding:8px 7px;border-bottom:1px solid #ede8dc;vertical-align:top}
 .muted-row{opacity:.72}
 .muted-row td{text-decoration:none}
 .muted-row .pill{font-weight:700}
+
+/* Acceso a la nube. Capa fija sobre la app: se muestra solo cuando no hay sesión
+   válida, de modo que abrir la app con la sesión guardada no molesta. */
+.capa-acceso{display:none;position:fixed;inset:0;background:#0008;z-index:60;align-items:center;justify-content:center;padding:20px}
+.capa-acceso.abierta{display:flex}
+.capa-acceso .modal-box{max-width:380px}
+.acceso-error{color:#c0392b;margin-top:10px;min-height:18px}

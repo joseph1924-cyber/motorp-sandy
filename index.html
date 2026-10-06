@@ -9,6 +9,19 @@
 <link rel="stylesheet" href="css/impresion.css">
 </head>
 <body>
+<div class="capa-acceso" id="capa-acceso">
+  <div class="modal-box">
+    <div class="section-title">Moto Repuesto Sandy</div>
+    <p class="sub" id="acceso-sub">Entra con tu usuario para que los datos se sincronicen entre tus dispositivos.</p>
+    <div class="modal-grid">
+      <div><label>Correo</label><input id="acceso-correo" type="email" autocomplete="username"></div>
+      <div><label>Contraseña</label><input id="acceso-clave" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')accesoEnviar()"></div>
+    </div>
+    <button class="btn" style="margin-top:14px" onclick="accesoEnviar()">Entrar</button>
+    <p class="acceso-error" id="acceso-error"></p>
+    <button class="btn secondary" onclick="accesoSinConexion()">Trabajar sin conexión con los datos de este dispositivo</button>
+  </div>
+</div>
 <div class="app">
 <aside class="side">
   <div class="brand" id="brand">MOTO REPUESTO SANDY<small>Gestión financiera y operacional</small></div>
@@ -39,6 +52,13 @@
   </div>
 </aside>
 <main class="main">
+<div class="card no-print" id="nube-aviso" style="display:none">
+  <div class="section-title" id="nube-estado">Nube</div>
+  <p id="nube-detalle">—</p>
+  <p id="nube-aviso-texto" style="margin:6px 0 10px">Hay dos versiones del documento y ninguna se puede descartar sola. Elige cuál conservar.</p>
+  <button class="btn" onclick="nubeResolver('nube')">Conservar la versión de la nube</button>
+  <button class="btn secondary" onclick="nubeResolver('local')">Conservar la de este dispositivo</button>
+</div>
 <section id="v-dashboard" class="view active">
   <h1>Resultados y rentabilidad</h1><p class="sub">Score semanal acumulable: ventas de contado, ventas a crédito y recibos de ingreso. Los tres datos se cargan manualmente a partir del sistema operativo del negocio.</p>
   <div class="card no-print"><div class="grid"><div><label>Período</label><select id="dash-period" onchange="setDashPeriod()"><option value="semana">Semana actual</option><option value="mes" selected>Mes actual</option><option value="trimestre">Trimestre actual</option><option value="personalizado">Personalizado</option></select></div><div><label>Desde</label><input type="date" id="dash-desde"></div><div><label>Hasta</label><input type="date" id="dash-hasta"></div></div><button class="btn" onclick="renderDashboard()">Actualizar</button><button class="btn secondary" onclick="printReport('v-dashboard','Estado de resultados')">Imprimir</button></div>
@@ -214,6 +234,19 @@
 <p class="sub">Protege los datos del sistema, controla el almacenamiento local y mantiene copias de seguridad fuera del navegador. La conexión con Google Drive se realiza mediante una carpeta de Google Drive para escritorio que tú autorizas desde Chrome.</p>
 
 <div class="card no-print">
+  <div class="section-title">Sincronización en la nube</div>
+  <div class="kpis">
+    <div class="kpi"><span>Estado</span><b id="ms-nube-status">—</b><small id="ms-nube-detail">—</small></div>
+    <div class="kpi"><span>Cuenta</span><b id="ms-nube-cuenta">—</b><small id="ms-nube-email">—</small></div>
+    <div class="kpi"><span>Revisión del documento</span><b id="ms-nube-rev">—</b><small>Se incrementa con cada guardado</small></div>
+  </div>
+  <div class="modal-actions" style="justify-content:flex-start;margin-top:10px">
+    <button class="btn secondary" onclick="accesoSalir()">Cerrar sesión en este dispositivo</button>
+    <button class="btn secondary" onclick="nubeSubir()">Subir cambios ahora</button>
+  </div>
+</div>
+
+<div class="card no-print">
   <div class="section-title">Estado de seguridad</div>
   <div class="kpis">
     <div class="kpi"><span>Base de datos local</span><b id="ms-db-status">—</b><small id="ms-db-detail">—</small></div>
@@ -246,6 +279,12 @@
     <div><label>Retención de copias fechadas</label><select id="ms-retention" onchange="setRetention()"><option value="7">7 copias</option><option value="15">15 copias</option><option value="30" selected>30 copias</option><option value="60">60 copias</option></select></div>
   </div>
   <p id="ms-drive-message" class="note" style="margin-top:10px">Primero conecta una carpeta de Google Drive para escritorio.</p>
+  <div class="card no-print" id="ms-rec-idb" style="display:none;margin-top:14px">
+    <div class="section-title">Datos sin aplicar desde IndexedDB</div>
+    <p class="note" id="ms-rec-idb-detalle">—</p>
+    <p class="note">No se aplican solos a propósito: si la nube está conectada, podrían machacar el documento del servidor.</p>
+    <button class="btn secondary" onclick="aplicarRecuperacionIndexedDB()">Revisar y aplicar</button>
+  </div>
 </div>
 
 <div class="card no-print">
@@ -291,6 +330,9 @@
 <script src="js/nucleo/almacen.js"></script>
 <script src="js/nucleo/utiles.js"></script>
 <script src="js/nucleo/secuencias.js"></script>
+<script src="js/nucleo/config-supabase.js"></script>
+<script src="js/nucleo/supabase.js"></script>
+<script src="js/nucleo/nube.js"></script>
 <script src="js/nucleo/idb.js"></script>
 <script src="js/nucleo/respaldo.js"></script>
 <script src="js/nucleo/respaldo-almacen.js"></script>
@@ -310,6 +352,7 @@
 <script src="js/ui/navegacion.js"></script>
 <script src="js/ui/editor.js"></script>
 <script src="js/ui/impresion.js"></script>
+<script src="js/ui/nube-acceso.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
