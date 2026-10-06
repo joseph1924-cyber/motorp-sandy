@@ -8,7 +8,8 @@
     "test": "node --test test/*.test.js",
     "build": "node build.js",
     "verificar": "node build.js --verificar",
-    "check": "npm test && node build.js --verificar && node build.js"
+    "check": "npm test && node build.js --verificar && node build.js",
+    "supabase:verificar": "node supabase/verificar-rls.js"
   },
   "engines": {
     "node": ">=18"

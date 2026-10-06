@@ -11,3 +11,10 @@ Thumbs.db
 # Copias de trabajo accidentales del monolito
 *.html.bak
 *.tmp
+
+# Credenciales de Supabase. La URL y la clave anon SON públicas por diseño, pero no
+# deben vivir en el repo: la que nunca debe aparecer aquí es service_role.
+/supabase/.env
+/supabase/.env.local
+.env
+.env.local
