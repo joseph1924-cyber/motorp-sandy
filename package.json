@@ -5,9 +5,10 @@
   "description": "Gestión financiera y operacional de Moto Repuesto Sandy. Aplicación web de un solo archivo, sin dependencias.",
   "license": "UNLICENSED",
   "scripts": {
+    "test": "node --test test/*.test.js",
     "build": "node build.js",
     "verificar": "node build.js --verificar",
-    "check": "node build.js --verificar && node build.js"
+    "check": "npm test && node build.js --verificar && node build.js"
   },
   "engines": {
     "node": ">=18"

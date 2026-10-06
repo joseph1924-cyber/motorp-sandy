@@ -10,7 +10,9 @@ function fillReporteTerceros(prefix){
   if(tipo==='suplidores'||tipo==='general') opts+=db.suplidores.map(s=>`<option value="sup:${s.id}">${s.nombre} — Suplidor</option>`).join('');
   if(tipo==='acreedores'||tipo==='general') opts+=db.acreedores.filter(a=>a.categoria!=='Suplidor').map(a=>`<option value="acr:${a.id}">${a.nombre} — Acreedor</option>`).join('');
   sel.innerHTML=opts;
-  if([...sel.options].some(o=>o.value===prev))sel.value=prev;
+  // Asignar un valor que no existe entre las opciones deja value en '' por sí solo,
+  // así que no hace falta recorrer sel.options.
+  if(prev)sel.value=prev;
 }
 
 function fillCxpReportAcreedores(){
@@ -281,6 +283,6 @@ function renderAntiguedadCxp(){
     }
     const total=b.reduce((z,v)=>z+v,0);if(total>.004)rows.push({a:e,b,total});
   });
-  tb.innerHTML=rows.length?rows.map(r=>`<tr><td>${r.a.nombre} <small>(${r.a.categoria})</small></td>${r.b.map(v=>`<td class="r">${money(v)}</td>`).join('')}<td class="r"><b>${money(r.total)}</b></td></tr>`).join(''):'<tr><td colspan="7" class="empty">No hay saldos pendientes al corte.</td></tr>';
+  tb.innerHTML=rows.length?rows.map(r=>`<tr>${r.a.nombre?`<td>${esc(r.a.nombre)} <small>(${esc(r.a.categoria)})</small></td>`:`<td><small>(${esc(r.a.categoria)})</small></td>`}${r.b.map(v=>`<td class="r">${money(v)}</td>`).join('')}<td class="r"><b>${money(r.total)}</b></td></tr>`).join(''):'<tr><td colspan="7" class="empty">No hay saldos pendientes al corte.</td></tr>';
   const t=[0,0,0,0,0];rows.forEach(r=>r.b.forEach((v,i)=>t[i]+=v));const total=t.reduce((z,v)=>z+v,0);tf.innerHTML=`<tr class="report-total-row"><td>TOTALES GENERALES</td>${t.map(v=>`<td class="r">${money(v)}</td>`).join('')}<td class="r">${money(total)}</td></tr>`;
 }

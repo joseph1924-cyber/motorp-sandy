@@ -18,7 +18,14 @@ function printPagoSp(id){
 
 function printSerial(codeValue){return codeValue?`<div class="print-serial">No. de comprobante: <b>${esc(codeValue)}</b></div>`:''}
 
-function printRecord(type,id,kind){let title='',body='';const row=(a,b)=>`<tr><td><b>${a}</b></td><td>${b}</td></tr>`;if(type==='gestion'){const arr=kind==='contado'?db.gestionContado:kind==='credito'?db.gestionCredito:db.gestionRecibos,x=arr.find(z=>z.id===id);title='Resultado semanal';body=`<h2>${kind==='contado'?'Ventas de contado':kind==='credito'?'Ventas a crédito':'Recibos de ingreso'}</h2><div class="box"><table>${row('Semana terminada',fmtDate(x.semanaFin))}${row('Monto','RD$ '+money(x.monto))}${row('Observación',x.nota||'—')}</table></div>`}else if(type==='acreedor'){
+// Fila etiqueta/valor compartida por todos los documentos imprimibles. Antes vivía
+// como const dentro de printRecord(), así que prestamos.js no la encontraba al
+// imprimir la recepción de un préstamo.
+// `a` siempre es una etiqueta literal y `b` el dato, así que escapar aquí cubre los
+// 107 puntos de impresión de una sola vez. esc() no altera números ni fechas.
+function row(a,b){return `<tr><td><b>${a}</b></td><td>${esc(b)}</td></tr>`}
+
+function printRecord(type,id,kind){let title='',body='';if(type==='gestion'){const arr=kind==='contado'?db.gestionContado:kind==='credito'?db.gestionCredito:db.gestionRecibos,x=arr.find(z=>z.id===id);title='Resultado semanal';body=`<h2>${kind==='contado'?'Ventas de contado':kind==='credito'?'Ventas a crédito':'Recibos de ingreso'}</h2><div class="box"><table>${row('Semana terminada',fmtDate(x.semanaFin))}${row('Monto','RD$ '+money(x.monto))}${row('Observación',x.nota||'—')}</table></div>`}else if(type==='acreedor'){
 const x=creditorById(id);
 if(!x){notify('Acreedor no encontrado');return}
 const bs=db.facturasSuplidor.filter(f=>(f.acreedorId===x.id||db.suplidores.some(s=>s.id===f.suplidorId&&s.acreedorId===x.id))).reduce((z,f)=>z+Number(f.saldo||0),0);

@@ -7,11 +7,26 @@ const KEY='moto_repuesto_sandy_finanzas_v1';
 
 let db={empresa:{nombre:'Moto Repuesto Sandy',margen:30},gestionContado:[],gestionCredito:[],gestionRecibos:[],suplidores:[],facturasSuplidor:[],pagosSuplidor:[],gastos:[],empleados:[],nominas:[],acreedores:[],obligaciones:[],prestamos:[],pagosObligaciones:[],pagosPrestamos:[],seriales:{}};
 
-function save(){localStorage.setItem(KEY,JSON.stringify(db));idbPutState().catch(()=>{});scheduleDriveBackup();}
+function motivoFalloAlmacenamiento(e){return(e&&(e.name==='QuotaExceededError'||e.code===22))?'el almacenamiento de este navegador está lleno':(e&&e.message)||'error desconocido'}
+
+// localStorage.setItem lanza QuotaExceededError al superarse la cuota. Sin este
+// try/catch la excepción abortaba la línea entera, así que el espejo de IndexedDB y
+// el respaldo de Google Drive nunca se ejecutaban y el usuario no se enteraba de que
+// el registro se había perdido.
+function persistirLocal(){
+  try{localStorage.setItem(KEY,JSON.stringify(db));return true}
+  catch(e){
+    console.error('No se pudo guardar en localStorage:',e);
+    notify('No se pudo guardar: '+motivoFalloAlmacenamiento(e)+'. Exporta una copia de seguridad desde Mantenimiento.');
+    return false
+  }
+}
+
+function save(){persistirLocal();idbPutState().catch(()=>{});scheduleDriveBackup();}
 
 /* ==================== MANTENIMIENTO Y SEGURIDAD ==================== */
 
-function saveWithoutDrive(){localStorage.setItem(KEY,JSON.stringify(db));idbPutState().catch(()=>{})}
+function saveWithoutDrive(){persistirLocal();idbPutState().catch(()=>{})}
 
 function databaseStats(){const textData=JSON.stringify(db),bytes=new Blob([textData]).size;return {bytes,contado:db.gestionContado.length,credito:db.gestionCredito.length,recibos:db.gestionRecibos.length,acreedores:db.acreedores.length,facturas:db.facturasSuplidor.length,prestamos:db.prestamos.length,pagos:db.pagosSuplidor.length+db.pagosObligaciones.length+db.pagosPrestamos.length,gastos:db.gastos.length+db.obligaciones.length}}
 
@@ -72,10 +87,6 @@ db.prestamos.forEach(p=>{(p.cuotas||[]).forEach(q=>{if(q.estado==='Pagada'&&q.mo
 reconciliarPagosPrestamoCalendario();
 // Los comprobantes de pago son la fuente operativa para disminuir el saldo.
 // Si una versión anterior guardó pagos pero dejó el saldo desfasado, lo corregimos
-// usando el saldo vigente como referencia y conservando el historial implícito.
+// usando el saldo vigente como referencia y conservamos el historial implícito.
 db.pagosPrestamos.forEach(pg=>{const p=db.prestamos.find(x=>x.id===pg.prestamoId);if(!p)return;});
-if(!db.empleados.some(e=>String(e.nombre||'').trim().toLowerCase()==='antonio de jesús')){
- const e={id:uid(),codigo:code('EMP',db.empleados),nombre:'Antonio de Jesús',cedula:'',cargo:'',fechaIngreso:today(),jornada:'Tiempo completo',frecuencia:'Quincenal',salarioMensual:10000,pagoPeriodo:5000,activo:true};
- db.empleados.push(e);save();
-}
 }

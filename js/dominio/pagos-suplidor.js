@@ -22,7 +22,7 @@ function actualizarReferenciaPagoSp(){
 function renderFacturasPagoSp(){
  const sid=$('pg-sp').value,fs=db.facturasSuplidor.filter(x=>x.suplidorId===sid&&x.saldo>.004).sort((a,b)=>a.vencimiento.localeCompare(b.vencimiento));let left=Math.max(0,+$('pg-monto')?.value||0);
  const rows=fs.map(x=>{const aplicado=Math.min(left,Number(x.saldo||0));left-=aplicado;return {x,aplicado,nuevo:Math.max(0,Number(x.saldo||0)-aplicado)}});
- $('pg-facturas').innerHTML=rows.length?`<table><thead><tr><th>Factura</th><th>Vence</th><th class="r">Saldo</th><th class="r">Aplicado</th><th>Tipo</th><th class="r">Balance actual</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.x.documento||r.x.codigo}</td><td>${fmtDate(r.x.vencimiento)}</td><td class="r">${money(r.x.saldo)}</td><td class="r">${money(r.aplicado)}</td><td>${r.aplicado>.004?(r.nuevo<=.004?'Saldo':'Abono'):'—'}</td><td class="r">${money(r.nuevo)}</td></tr>`).join('')}</tbody></table>`:'';
+ $('pg-facturas').innerHTML=rows.length?`<table><thead><tr><th>Factura</th><th>Vence</th><th class="r">Saldo</th><th class="r">Aplicado</th><th>Tipo</th><th class="r">Balance actual</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.x.documento||r.x.codigo)}</td><td>${fmtDate(r.x.vencimiento)}</td><td class="r">${money(r.x.saldo)}</td><td class="r">${money(r.aplicado)}</td><td>${r.aplicado>.004?(r.nuevo<=.004?'Saldo':'Abono'):'—'}</td><td class="r">${money(r.nuevo)}</td></tr>`).join('')}</tbody></table>`:'';
 }
 
 function addPagoSuplidor(){

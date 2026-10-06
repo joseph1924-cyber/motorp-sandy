@@ -45,7 +45,10 @@ function generarTablaAmortizacionAutomatica(){
    rows.push({numero:n,fecha,capital,interes,seguro,monto:cuotaTotal,saldoCapital:saldo,estado:'Pendiente'});
    fecha=addPeriodo(fecha,frecuencia);
  }
- if(rows.length<total && saldo>0.004)return notify('Las condiciones no permiten amortizar el préstamo con la cuota indicada');
+ // Con una cuota fija insuficiente el bucle completa las 12 filas y aun sobra saldo, así
+ // que la condición basada en rows.length nunca se cumplía y se escribía una tabla que no
+ // amortiza. Basta con mirar el saldo que queda.
+ if(saldo>0.004)return notify('Las condiciones no permiten amortizar el préstamo con la cuota indicada');
  const tb=$('pr-amort-body');if(!tb)return;
  tb.innerHTML='';
  rows.forEach(q=>addPrestamoAmortRow(q));

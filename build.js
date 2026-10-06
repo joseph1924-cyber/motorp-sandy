@@ -120,11 +120,34 @@ function multiconjunto(elementos) {
   return mapa;
 }
 
+/** Resta una lista de líneas de un multiconjunto, ignorando las que no estén. */
+function restar(mapa, elementos) {
+  const copia = new Map(mapa);
+  for (const e of elementos) {
+    const k = sinEspacios(e);
+    const n = copia.get(k);
+    if (n) copia.set(k, n - 1);
+  }
+  return copia;
+}
+
 /** Compara dos multiconjuntos y devuelve el exceso de cada elemento, no su recuento. */
 function comparar(mapaA, mapaB) {
   const faltan = [...mapaA].map(([k, v]) => [k, v - (mapaB.get(k) || 0)]).filter(([, d]) => d > 0);
   const sobran = [...mapaB].map(([k, v]) => [k, v - (mapaA.get(k) || 0)]).filter(([, d]) => d > 0);
   return { faltan, sobran };
+}
+
+/* Los cambios deliberados de la Fase 0 están declarados en original/cambios-fase0.js.
+ * Verificar que ese manifiesto sea fiel a sí mismo evita que quede desactualizado. */
+const MANIFIESTO = require(path.join(RAIZ, 'original', 'cambios-fase0.js')).cambios;
+
+function verificarManifiesto(ok) {
+  console.log('\nMANIFIESTO DE CAMBIOS INTENCIONALES');
+  const sinMotivo = MANIFIESTO.filter((c) => !c.motivo || !c.archivo);
+  ok('cada cambio declara archivo y motivo', sinMotivo.length === 0,
+    sinMotivo.length ? `${sinMotivo.length} entradas incompletas` : `${MANIFIESTO.length} cambios`);
+  ok('queda registrado en git', fs.existsSync(path.join(RAIZ, 'original', 'cambios-fase0.js')));
 }
 
 function verificar() {
@@ -191,7 +214,28 @@ function verificar() {
       .split('\n')
   );
 
-  const difLineas = comparar(multiconjunto(lineas), multiconjunto(lineasNuevas));
+  verificarManifiesto(ok);
+
+  // El manifiesto describe diferencias deliberadas: primero se comprueba que cada línea
+  // «quita» estaba realmente en el original y cada «agrega» está realmente en el código
+  // nuevo. Si el manifiesto queda viejo, falla aquí en vez de dar un falso verde.
+  const quitaJs = MANIFIESTO.filter((c) => c.archivo.endsWith('.js')).flatMap((c) => c.quita);
+  const agregaJs = MANIFIESTO.filter((c) => c.archivo.endsWith('.js')).flatMap((c) => c.agrega);
+  const setOriginal = multiconjunto(lineas);
+  const setNuevo = multiconjunto(lineasNuevas);
+
+const quitaAusente = quitaJs.filter((l) => sinEspacios(l) && !setOriginal.get(sinEspacios(l)));
+  const agregaAusente = agregaJs.filter((l) => sinEspacios(l) && !setNuevo.get(sinEspacios(l)));
+  ok('el manifiesto sigue correspondiendo al original', quitaAusente.length === 0,
+    quitaAusente.slice(0, 2).map((l) => l.slice(0, 60)).join(' | '));
+  ok('el manifiesto sigue correspondiendo al código actual', agregaAusente.length === 0,
+    agregaAusente.slice(0, 2).map((l) => l.slice(0, 60)).join(' | '));
+
+  /* Las líneas en blanco no entran en el multiconjunto, así que se filtran del manifiesto
+   * antes de aplicarlo para no descuadrar los recuentos. */
+  const quitaAplicada = quitaJs.filter((l) => sinEspacios(l));
+  const agregaAplicada = agregaJs.filter((l) => sinEspacios(l));
+  const difLineas = comparar(restar(setOriginal, quitaAplicada), restar(setNuevo, agregaAplicada));
   ok('ninguna línea de código perdida', difLineas.faltan.length === 0,
     difLineas.faltan.slice(0, 3).map(([k]) => k.slice(0, 70)).join(' | '));
   const llaves = difLineas.sobran.filter(([k]) => k === '}');
@@ -201,26 +245,54 @@ function verificar() {
   ok('única diferencia: la llave de cierre de la IIFE convertida',
     llaves.length === 1 && llaves[0][1] === 1, `encontradas ${llaves.length}`);
 
+  /* Declaraciones y funciones: el original no puede perder ninguna, y todo lo que aparezca
+   * de más tiene que estar en el manifiesto. Como una línea modificada vuelve a nombrar su
+   * propia función, «nueva» significa «no existía en el original», no «no aparece en las
+   * líneas agregadas». Por eso se comparan multiconjuntos de los sobrantes. */
   const textoNuevo = lineasNuevas.join('\n');
-  const decl = (t) => [...t.matchAll(/(?:^|\n)(?:async\s+function|function|const|let|var)\s+([A-Za-z0-9_$]+)/g)].map((m) => m[1]).sort();
-  const dOrig = decl(lineas.join('\n'));
-  const dNuevo = decl(textoNuevo);
-  ok('mismas declaraciones de nivel superior',
-    dOrig.length === dNuevo.length && dOrig.every((x) => dNuevo.includes(x)),
-    `${dOrig.length} vs ${dNuevo.length}`);
+  const decl = (t) => [...t.matchAll(/(?:^|\n)(?:async\s+function|function|const|let|var)\s+([A-Za-z0-9_$]+)/g)].map((m) => m[1]);
+  const nombres = (t) => [...t.matchAll(/(?:async\s+)?function\s+([A-Za-z0-9_$]+)\s*\(/g)].map((m) => m[1]);
 
-  const nombres = (t) => [...t.matchAll(/(?:async\s+)?function\s+([A-Za-z0-9_$]+)\s*\(/g)].map((m) => m[1]).sort();
-  const fOrig = nombres(lineas.join('\n'));
-  const fNuevo = nombres(textoNuevo);
-  ok('mismas funciones declaradas',
-    fOrig.length === fNuevo.length && fOrig.every((x) => fNuevo.includes(x)),
-    `${fOrig.length} vs ${fNuevo.length}`);
+  const setOrigDecl = multiconjunto(decl(lineas.join('\n')));
+  const setNuevoDecl = multiconjunto(decl(textoNuevo));
+  const declaradas = decl(agregaAplicada.join('\n')).filter((n) => !setOrigDecl.get(n));
+  const sobranDecl = comparar(setOrigDecl, setNuevoDecl).sobran.map(([n]) => n);
+
+  ok('ninguna declaración perdida', comparar(setOrigDecl, setNuevoDecl).faltan.length === 0,
+    comparar(setOrigDecl, setNuevoDecl).faltan.map(([n]) => n).join(', '));
+  ok('toda declaración nueva está registrada en el manifiesto',
+    comparar(multiconjunto(declaradas), multiconjunto(sobranDecl)).faltan.length === 0 &&
+      comparar(multiconjunto(declaradas), multiconjunto(sobranDecl)).sobran.length === 0,
+    `esperadas ${declaradas.join(', ') || '—'} · encontradas ${sobranDecl.join(', ') || '—'}`);
+
+  const setOrigFn = multiconjunto(nombres(lineas.join('\n')));
+  const setNuevoFn = multiconjunto(nombres(textoNuevo));
+  const difFn = comparar(setOrigFn, setNuevoFn);
+  const fnDeclaradas = nombres(agregaAplicada.join('\n')).filter((n) => !setOrigFn.get(n));
+  const sobranFn = difFn.sobran.map(([n]) => n);
+  const difFnNuevas = comparar(multiconjunto(fnDeclaradas), multiconjunto(sobranFn));
+
+  ok('ninguna función perdida', difFn.faltan.length === 0, difFn.faltan.map(([n]) => n).join(', '));
+  ok('toda función nueva está registrada en el manifiesto',
+    difFnNuevas.faltan.length === 0 && difFnNuevas.sobran.length === 0,
+    `esperadas ${fnDeclaradas.join(', ') || '—'} · encontradas ${sobranFn.join(', ') || '—'}`);
 
   console.log('\nHTML');
   const htmlActual = fs.readFileSync(ORIGEN_HTML, 'utf8');
   const cuerpoOriginal = sinEspacios(L.slice(L.findIndex((l) => l.trim() === '<body>'), L.findIndex((l) => l.trim() === '<script>')).join('\n'));
-  const cuerpoNuevo = sinEspacios(htmlActual.match(/<body>[\s\S]*?(?=<script src=)/)[0]);
-  ok('cuerpo del documento intacto', cuerpoOriginal === cuerpoNuevo);
+  let cuerpoNuevo = sinEspacios(htmlActual.match(/<body>[\s\S]*?(?=<script src=)/)[0]);
+  /* Se aplica al original cada sustitución de texto registrada, para comparar el cuerpo
+   *resultante contra el que hay hoy en lugar de exigir que nunca cambie. */
+  const cambiosHtml = MANIFIESTO.filter((c) => c.archivo.endsWith('.html'));
+  let htmlAplicado = cuerpoOriginal;
+  for (const c of cambiosHtml) {
+    for (let i = 0; i < c.quita.length; i++) {
+      const a = sinEspacios(c.quita[i]), b = sinEspacios(c.agrega[i] ?? '');
+      if (a && htmlAplicado.includes(a)) htmlAplicado = htmlAplicado.replace(a, () => b);
+    }
+  }
+  ok('cuerpo del documento intacto salvo cambios declarados', htmlAplicado === cuerpoNuevo);
+  ok('todo cambio de HTML está registrado en el manifiesto', cambiosHtml.length === MANIFIESTO.filter((c) => !c.archivo.endsWith('.js')).length);
   ok('el script de arranque va al final', /<script src="js\/main\.js"><\/script>/.test(htmlActual));
 
   console.log(fallos === 0 ? '\nVERIFICACIÓN CORRECTA ✅' : `\n${fallos} VERIFICACIONES FALLIDAS ❌`);

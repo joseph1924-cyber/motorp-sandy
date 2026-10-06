@@ -8,7 +8,7 @@ function employeeById(id){return db.empleados.find(e=>e.id===id)}
 function employeeName(id){return employeeById(id)?.nombre||'—'}
 
 function fillEmpleados(){
- const opts=db.empleados.filter(e=>e.activo!==false).map(e=>`<option value="${e.id}">${e.codigo} — ${e.nombre}</option>`).join('');
+ const opts=db.empleados.filter(e=>e.activo!==false).map(e=>`<option value="${esc(e.id)}">${esc(e.codigo)} — ${esc(e.nombre)}</option>`).join('');
  if($('nom-empleado'))$('nom-empleado').innerHTML='<option value="">Seleccione...</option>'+opts;
 }
 
@@ -43,9 +43,9 @@ function renderNomina(){
  fillEmpleados();
  const a=$('nom-f-desde')?.value||'',b=$('nom-f-hasta')?.value||'',f=$('nom-f-estado')?.value||'';
  const emps=[...db.empleados].sort((x,y)=>x.nombre.localeCompare(y.nombre,'es'));
- $('tbl-empleados').innerHTML=emps.length?emps.map(e=>`<tr><td>${e.codigo}</td><td>${e.nombre}</td><td>${e.cargo||'—'}</td><td>${e.frecuencia||'—'}</td><td class="r">${money(e.salarioMensual)}</td><td class="r">${money(e.pagoPeriodo)}</td><td><span class="pill ${e.activo===false?'red':'green'}">${e.activo===false?'Inactivo':'Activo'}</span></td><td class="no-print action-cell"><div class="action-buttons"><button class="btn secondary" onclick="openEditor('empleado','${e.id}')">Editar</button><button class="btn secondary" onclick="printRecord('empleado','${e.id}')">Imprimir</button><button class="btn secondary" onclick="toggleEmpleado('${e.id}')">${e.activo===false?'Activar':'Desactivar'}</button></div></td></tr>`).join(''):'<tr><td colspan="8" class="empty">Sin empleados.</td></tr>';
+ $('tbl-empleados').innerHTML=emps.length?emps.map(e=>`<tr><td>${esc(e.codigo)}</td><td>${esc(e.nombre)}</td><td>${esc(e.cargo||'—')}</td><td>${esc(e.frecuencia||'—')}</td><td class="r">${money(e.salarioMensual)}</td><td class="r">${money(e.pagoPeriodo)}</td><td><span class="pill ${e.activo===false?'red':'green'}">${e.activo===false?'Inactivo':'Activo'}</span></td><td class="no-print action-cell"><div class="action-buttons"><button class="btn secondary" onclick="openEditor('empleado','${e.id}')">Editar</button><button class="btn secondary" onclick="printRecord('empleado','${e.id}')">Imprimir</button><button class="btn secondary" onclick="toggleEmpleado('${e.id}')">${e.activo===false?'Activar':'Desactivar'}</button></div></td></tr>`).join(''):'<tr><td colspan="8" class="empty">Sin empleados.</td></tr>';
  const l=db.nominas.filter(n=>inRange(n.fecha,a,b)).filter(n=>!f||n.estado===f).sort((x,y)=>y.fecha.localeCompare(x.fecha));
- $('tbl-nomina').innerHTML=l.length?l.map(n=>`<tr><td>${n.codigo}</td><td>${employeeName(n.empleadoId)}</td><td>${fmtDate(n.desde)} al ${fmtDate(n.hasta)}</td><td>${fmtDate(n.fecha)}</td><td class="r">${money(n.monto)}</td><td><span class="pill ${n.estado==='Pagado'?'green':'yellow'}">${n.estado}</span></td><td>${n.metodo||'—'}</td><td class="no-print action-cell"><div class="action-buttons">${n.estado==='Pendiente'?`<button class="btn" onclick="pagarNomina('${n.id}')">Pagar</button>`:''}<button class="btn secondary" onclick="imprimirNomina('${n.id}')">Imprimir</button></div></td></tr>`).join(''):'<tr><td colspan="8" class="empty">Sin nóminas en el período seleccionado.</td></tr>';
+ $('tbl-nomina').innerHTML=l.length?l.map(n=>`<tr><td>${esc(n.codigo)}</td><td>${esc(employeeName(n.empleadoId))}</td><td>${fmtDate(n.desde)} al ${fmtDate(n.hasta)}</td><td>${fmtDate(n.fecha)}</td><td class="r">${money(n.monto)}</td><td><span class="pill ${n.estado==='Pagado'?'green':'yellow'}">${esc(n.estado)}</span></td><td>${esc(n.metodo||'—')}</td><td class="no-print action-cell"><div class="action-buttons">${n.estado==='Pendiente'?`<button class="btn" onclick="pagarNomina('${n.id}')">Pagar</button>`:''}<button class="btn secondary" onclick="imprimirNomina('${n.id}')">Imprimir</button></div></td></tr>`).join(''):'<tr><td colspan="8" class="empty">Sin nóminas en el período seleccionado.</td></tr>';
  $('nom-sum').textContent=money(l.reduce((z,x)=>z+Number(x.monto||0),0));$('nom-pend').textContent=money(l.filter(x=>x.estado==='Pendiente').reduce((z,x)=>z+Number(x.monto||0),0));
 }
 

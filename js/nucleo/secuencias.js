@@ -26,13 +26,17 @@ function reestablecerSecuenciaGO(){
 }
 
 function reajustarSecuenciaPPR(){
+  // Corrección única, igual que GO. Antes se repetía en cada arranque: renumeraba
+  // todos los comprobantes de préstamo por fecha, así que registrar un pago con fecha
+  // anterior reordenaba los recibos ya impresos y su número dejaba de coincidir con el
+  // que muestra el sistema. El saldo no se toca, solo los códigos.
+  if(db.seriales.PPR_reajustada===true)return false;
   db.pagosPrestamos=(db.pagosPrestamos||[]);
   const pagos=[...db.pagosPrestamos].sort((a,b)=>String(a.fecha||'').localeCompare(String(b.fecha||''))||String(a.id||'').localeCompare(String(b.id||'')));
-  let necesita=false;
-  pagos.forEach((x,i)=>{if(x.codigo!==`PPR-${String(i+1).padStart(5,'0')}`)necesita=true;});
-  if(!necesita){db.seriales.PPR=pagos.length;return false;}
-  pagos.forEach((x,i)=>{x.codigo=`PPR-${String(i+1).padStart(5,'0')}`;if(!x.estado)x.estado='Activo';});
+  let cambio=false;
+  pagos.forEach((x,i)=>{const nuevo=`PPR-${String(i+1).padStart(5,'0')}`;if(x.codigo!==nuevo){x.codigo=nuevo;cambio=true}if(!x.estado)x.estado='Activo';});
   db.seriales.PPR=pagos.length;
-  saveWithoutDrive();
-  return true;
+  db.seriales.PPR_reajustada=true;
+  if(cambio)saveWithoutDrive();
+  return cambio;
 }
