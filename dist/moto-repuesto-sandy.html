@@ -8,9 +8,15 @@
 /* Base — variables, reset, tipografía, layout, navegación lateral y responsive
  * Moto Repuesto Sandy — extraído del monolito v18 v5.
  * Mantener el orden de este archivo: la cascada depende de él.
- */
-
-:root{--paper:#eff1f3;--ink:#1a2024;--soft:#5a646e;--accent:#c1502e;--accent-claro:#f0915e;--line:#d5dae0;--card:#fff;--green:#2f6f4e;--red:#a83232;--yellow:#b7791f;--blue:#35658d}
+ *
+ * El naranja de acento es profundo a propósito: con texto blanco encima da 5.3:1 y como
+ * texto pequeño sobre el fondo da 4.7:1, los dos por encima del 4.5:1 que pide WCAG AA.
+ * El naranja claro de marca no aguanta texto blanco (2.4:1), así que solo se usa en hover y
+ * en elementos grandes, nunca como texto.
+ *
+ * Un comentario pegado a una regla forma parte del texto con el que esa regla se declara,
+ * así que los comentarios explicativos viven aquí arriba y no entre reglas. */
+:root{--paper:#eff1f3;--ink:#1a2024;--soft:#5a646e;--accent:#b8481f;--accent-claro:#f0915e;--line:#d5dae0;--card:#fff;--green:#2f6f4e;--red:#a83232;--yellow:#b7791f;--blue:#35658d}
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 .app{display:flex;min-height:100vh}
@@ -117,31 +123,57 @@ td{padding:8px 7px;border-bottom:1px solid #eaedf0;vertical-align:top}
  * se alcanza con el teclado.
  *
  * Se muestra solo cuando no hay sesión válida, de modo que abrir la app con la sesión
- * guardada sigue siendo tan rápido como antes de añadir la nube. */
-.acceso{display:none;background:var(--paper);color:var(--ink);padding:32px 24px}
+ * guardada sigue siendo tan rápido como antes de añadir la nube.
+ *
+* La composición es una sola columna centrada con un máximo de 400px: en escritorio queda
+ * equilibrada en el medio, y en móvil baja a una columna sin scroll horizontal porque el
+ * ancho lo pone el `max-width` y no un ancho fijo.
+ *
+ * Los 16px de los campos no son un capricho: por debajo de ese tamaño Safari en iOS hace
+ * zoom al enfocar y descuadra la pantalla justo cuando se está escribiendo.
+ *
+ * `dvh` evita el salto del hueco inferior en móvil al abrir y cerrar el teclado virtual; la
+ * línea en vh es el respaldo para los que no lo soportan.
+ *
+ * El botón de ver la contraseña va absoluto dentro del campo para no robarle ancho al input
+ * ni poder desbordar en móvil; el `padding-right` deja hueco para que el texto no pase por
+ * debajo.
+ *
+ * Un comentario pegado a una regla forma parte del texto con el que se declara esa regla.
+ * Reescribirlo no rompe nada mientras el manifiesto de la fase se recalcule entero, porque
+ * entonces la regla se vuelve a declarar con su texto nuevo y no queda ninguna declaración
+ * vieja que huérfane. Lo que si hay que declarar a mano es lo contrario: una línea que
+ * declaró una fase anterior y esta fase quita del todo.
+ *
+ * Sin transiciones hay menos ruido, y además se respetan `prefers-reduced-motion`: si el
+ * sistema pide quietud, las transiciones se anulan por completo. */
+
+.acceso{display:none;background:var(--paper);color:var(--ink);padding:32px 20px}
 .acceso.abierta{display:block}
 body.acceso-activo .app{display:none}
-/* dvh evita el salto del hueco inferior en móvil al abrir y cerrar el teclado virtual;
-   la línea en vh es el respaldo para los que no lo soportan. */
-.acceso-inner{max-width:880px;margin:0 auto;min-height:100vh;min-height:100dvh;display:grid;grid-template-columns:1fr minmax(300px,360px);gap:52px;align-items:center}
-.acceso-marca{max-width:32ch}
-.acceso-eyebrow{margin:0 0 13px;font:700 .7rem/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;letter-spacing:.17em;text-transform:uppercase;color:var(--accent)}
-.acceso-titulo{margin:0 0 12px;font:400 2.05rem/1.16 Georgia,serif}
-.acceso-texto{margin:0;color:var(--soft);font-size:.94rem;line-height:1.55}
-.acceso-panel{border-left:1px solid var(--line);padding-left:40px}
-.acceso-form{display:flex;flex-direction:column;gap:13px}
-.acceso-form label{margin-bottom:5px}
-.acceso-clave{display:flex;gap:8px}
-.acceso-clave input{flex:1;min-width:0}
-.acceso-ver{flex:0 0 auto;border:1px solid var(--line);background:#fff;color:var(--soft);border-radius:4px;padding:0 13px;cursor:pointer;font:600 .78rem -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-.acceso-ver:hover{color:var(--ink);border-color:#b9c0c8}
-.acceso-entrar{width:100%;margin:0;padding:12px;background:var(--accent);font-weight:700}
-.acceso-entrar:hover{background:#a94425}
-.acceso-error{color:var(--red);margin:0;font-size:.82rem;min-height:1.2em}
-.acceso-offline{margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
-.acceso-offline .btn{margin:0;width:100%;padding:11px}
-.acceso-offline .note{margin:9px 0 0;text-align:center}
-@media(max-width:760px){.acceso{padding:22px 18px}.acceso-inner{grid-template-columns:1fr;gap:28px;align-content:center;padding:26px 0}.acceso-marca{max-width:none}.acceso-titulo{font-size:1.65rem}.acceso-panel{border-left:0;padding-left:0;padding-top:24px;border-top:1px solid var(--line)}}
+.acceso-inner{width:100%;max-width:400px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;justify-content:center}
+.acceso-marca{text-align:center;margin-bottom:26px}
+.acceso-eyebrow{margin:0 0 10px;font:700 .72rem/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+.acceso-titulo{margin:0;font:400 1.9rem/1.15 Georgia,serif}
+.acceso-form{display:flex;flex-direction:column;gap:16px}
+.acceso-campo label{margin-bottom:7px;font-size:.85rem;font-weight:600;color:var(--ink)}
+.acceso-form input{min-height:50px;padding:12px 13px;font-size:16px;border-radius:6px}
+.acceso-form input[aria-invalid="true"]{border-color:var(--red)}
+.acceso-form input[aria-invalid="true"]:focus{outline-color:var(--red)}
+.acceso-clave{position:relative}
+.acceso-clave input{padding-right:62px}
+.acceso-ver{position:absolute;right:6px;top:50%;transform:translateY(-50%);min-height:38px;border:0;border-radius:5px;background:none;color:var(--accent);padding:0 10px;cursor:pointer;font:600 .85rem -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.acceso-ver:hover{text-decoration:underline}
+.acceso-entrar{width:100%;margin:0;min-height:50px;padding:13px;background:var(--accent);color:#fff;font-size:1rem;font-weight:700;border-radius:6px}
+.acceso-entrar:hover{background:#9c3f18}
+.acceso-entrar:disabled{opacity:.6;cursor:default}
+.acceso-entrar:disabled:hover{background:var(--accent)}
+.acceso-error{margin:0;color:var(--red);font-size:.86rem;min-height:1.25em}
+.acceso-offline{margin-top:20px;text-align:center}
+.acceso-offline .btn{margin:0;width:100%;min-height:48px;padding:10px;background:none;border:0;color:var(--soft);font-weight:600}
+.acceso-offline .btn:hover{color:var(--accent)}
+@media(max-width:760px){.acceso{padding:24px 18px}.acceso-inner{padding:22px 0}.acceso-titulo{font-size:1.7rem}}
+@media(prefers-reduced-motion:reduce){.acceso *{transition:none!important}}
 /* css/vistas.css */
 /* Vistas — CxP, reportes, captura de préstamo, mantenimiento y selector de suplidor
  * Moto Repuesto Sandy — extraído del monolito v18 v5.
@@ -221,29 +253,25 @@ body.acceso-activo .app{display:none}
   <div class="acceso-inner">
     <div class="acceso-marca">
       <p class="acceso-eyebrow">Moto Repuesto Sandy</p>
-      <h1 class="acceso-titulo" id="acceso-titulo">Tus números, en todos tus equipos.</h1>
-      <p class="acceso-texto">Entra para que la contabilidad se sincronice entre el taller, la casa y la oficina. Quien entre en un equipo ve lo mismo que el resto.</p>
+      <h1 class="acceso-titulo" id="acceso-titulo">Bienvenido</h1>
     </div>
-    <div class="acceso-panel">
-      <form class="acceso-form" id="acceso-form" onsubmit="accesoEnviar();return false" novalidate>
-        <div>
-          <label for="acceso-correo">Correo</label>
-          <input id="acceso-correo" type="email" autocomplete="username" autocapitalize="off" spellcheck="false">
-        </div>
-        <div>
-          <label for="acceso-clave">Contraseña</label>
-          <div class="acceso-clave">
-            <input id="acceso-clave" type="password" autocomplete="current-password">
-            <button class="acceso-ver" type="button" onclick="accesoVerClave()" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button>
-          </div>
-        </div>
-        <p class="acceso-error" id="acceso-error" role="alert" aria-live="polite"></p>
-        <button class="btn acceso-entrar" type="submit">Entrar</button>
-      </form>
-      <div class="acceso-offline">
-        <button class="btn secondary" type="button" onclick="accesoSinConexion()">Continuar sin conexión</button>
-        <p class="note">Los cambios se guardarán en este equipo y se subirán cuando vuelvas a entrar.</p>
+    <form class="acceso-form" id="acceso-form" onsubmit="accesoEnviar();return false" novalidate>
+      <div class="acceso-campo">
+        <label for="acceso-correo">Correo</label>
+        <input id="acceso-correo" type="email" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="acceso-error">
       </div>
+      <div class="acceso-campo">
+        <label for="acceso-clave">Contraseña</label>
+        <div class="acceso-clave">
+          <input id="acceso-clave" type="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="acceso-error">
+          <button class="acceso-ver" type="button" onclick="accesoVerClave()" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button>
+        </div>
+      </div>
+      <p class="acceso-error" id="acceso-error" role="alert"></p>
+      <button class="btn acceso-entrar" id="acceso-entrar" type="submit">Entrar</button>
+    </form>
+    <div class="acceso-offline">
+      <button class="btn secondary" type="button" onclick="accesoSinConexion()">Continuar sin conexión</button>
     </div>
   </div>
 </section>
@@ -2615,6 +2643,10 @@ function accesoMostrar(){
   /* La app se oculta por CSS con esta clase. Antes quedaba dibujada detrás del login, así
    * que se podía tabular hasta el contenido con la pantalla de acceso abierta. */
   document.body.classList.add('acceso-activo');
+  /* La clave se borra al volver a mostrar la pantalla. Al cerrar sesión, lo que se escribió
+   * la vez anterior seguía en el DOM, a un clic de cualquiera que abra las herramientas del
+   * navegador. El correo se conserva: nadie debería tener que reescribirlo. */
+  accesoLimpiar();
   const correo=$('acceso-correo');
   if(correo)setTimeout(()=>correo.focus(),50);
 }
@@ -2623,9 +2655,28 @@ function accesoOcultar(){
   const c=$('acceso');
   if(c)c.classList.remove('abierta');
   document.body.classList.remove('acceso-activo');
+  accesoLimpiar();
+}
+
+/** Deja el formulario como estaba al abrirse: sin clave escrita, sin error y sin campos
+ *  marcados como inválidos. */
+function accesoLimpiar(){
   accesoClave(false);
-  const e=$('acceso-error');
-  if(e)e.textContent='';
+  accesoError('');
+  accesoInvalido(null);
+  const clave=$('acceso-clave');
+  if(clave)clave.value='';
+  const boton=$('acceso-entrar');
+  if(boton)boton.disabled=false;
+}
+
+/** Marca qué campo está mal. Sin esto el error solo se distingue por el color, que es
+ *  justo lo que no distingue nadie sin vista. Pasar null lo deja todo en neutro. */
+function accesoInvalido(campo){
+  for(const id of ['acceso-correo','acceso-clave']){
+    const el=$(id);
+    if(el)el.setAttribute('aria-invalid',String(campo===id));
+  }
 }
 
 /** Muestra u oculta la contraseña. Un botón aparte se lee mejor que un icono pequeño, y
@@ -2653,7 +2704,12 @@ function accesoError(mensaje){
 async function accesoEnviar(){
   const correo=($('acceso-correo')?.value||'').trim();
   const clave=$('acceso-clave')?.value||'';
-  if(!correo||!clave){accesoError('Escribe tu correo y contraseña.');return}
+  if(!correo||!clave){accesoError('Escribe tu correo y contraseña.');accesoInvalido(!correo?'acceso-correo':'acceso-clave');return}
+  accesoInvalido(null);
+  /* Mientras comprueba, el botón se deshabilita. Mandarlo dos veces seguidas solo produce
+   * dos peticiones y dos errores superpuestos en el mismo mensaje. */
+  const boton=$('acceso-entrar');
+  if(boton)boton.disabled=true;
   accesoError('Comprobando…');
   try{
     await sbIniciarSesion(correo,clave);
@@ -2663,6 +2719,7 @@ async function accesoEnviar(){
     /* Un fallo de red aquí NO es un problema del usuario: no se le pide que revise la
      * contraseña si lo que falla es que no hay conexión. */
     accesoError(sbEsFalloRed(e)?'No hay conexión con la nube. Puedes trabajar sin conexión con los datos de este dispositivo.':e.message);
+    if(boton)boton.disabled=false;
   }
 }
 

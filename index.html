@@ -13,29 +13,25 @@
   <div class="acceso-inner">
     <div class="acceso-marca">
       <p class="acceso-eyebrow">Moto Repuesto Sandy</p>
-      <h1 class="acceso-titulo" id="acceso-titulo">Tus números, en todos tus equipos.</h1>
-      <p class="acceso-texto">Entra para que la contabilidad se sincronice entre el taller, la casa y la oficina. Quien entre en un equipo ve lo mismo que el resto.</p>
+      <h1 class="acceso-titulo" id="acceso-titulo">Bienvenido</h1>
     </div>
-    <div class="acceso-panel">
-      <form class="acceso-form" id="acceso-form" onsubmit="accesoEnviar();return false" novalidate>
-        <div>
-          <label for="acceso-correo">Correo</label>
-          <input id="acceso-correo" type="email" autocomplete="username" autocapitalize="off" spellcheck="false">
-        </div>
-        <div>
-          <label for="acceso-clave">Contraseña</label>
-          <div class="acceso-clave">
-            <input id="acceso-clave" type="password" autocomplete="current-password">
-            <button class="acceso-ver" type="button" onclick="accesoVerClave()" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button>
-          </div>
-        </div>
-        <p class="acceso-error" id="acceso-error" role="alert" aria-live="polite"></p>
-        <button class="btn acceso-entrar" type="submit">Entrar</button>
-      </form>
-      <div class="acceso-offline">
-        <button class="btn secondary" type="button" onclick="accesoSinConexion()">Continuar sin conexión</button>
-        <p class="note">Los cambios se guardarán en este equipo y se subirán cuando vuelvas a entrar.</p>
+    <form class="acceso-form" id="acceso-form" onsubmit="accesoEnviar();return false" novalidate>
+      <div class="acceso-campo">
+        <label for="acceso-correo">Correo</label>
+        <input id="acceso-correo" type="email" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="acceso-error">
       </div>
+      <div class="acceso-campo">
+        <label for="acceso-clave">Contraseña</label>
+        <div class="acceso-clave">
+          <input id="acceso-clave" type="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="acceso-error">
+          <button class="acceso-ver" type="button" onclick="accesoVerClave()" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button>
+        </div>
+      </div>
+      <p class="acceso-error" id="acceso-error" role="alert"></p>
+      <button class="btn acceso-entrar" id="acceso-entrar" type="submit">Entrar</button>
+    </form>
+    <div class="acceso-offline">
+      <button class="btn secondary" type="button" onclick="accesoSinConexion()">Continuar sin conexión</button>
     </div>
   </div>
 </section>

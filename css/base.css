@@ -1,9 +1,15 @@
 /* Base — variables, reset, tipografía, layout, navegación lateral y responsive
  * Moto Repuesto Sandy — extraído del monolito v18 v5.
  * Mantener el orden de este archivo: la cascada depende de él.
- */
-
-:root{--paper:#eff1f3;--ink:#1a2024;--soft:#5a646e;--accent:#c1502e;--accent-claro:#f0915e;--line:#d5dae0;--card:#fff;--green:#2f6f4e;--red:#a83232;--yellow:#b7791f;--blue:#35658d}
+ *
+ * El naranja de acento es profundo a propósito: con texto blanco encima da 5.3:1 y como
+ * texto pequeño sobre el fondo da 4.7:1, los dos por encima del 4.5:1 que pide WCAG AA.
+ * El naranja claro de marca no aguanta texto blanco (2.4:1), así que solo se usa en hover y
+ * en elementos grandes, nunca como texto.
+ *
+ * Un comentario pegado a una regla forma parte del texto con el que esa regla se declara,
+ * así que los comentarios explicativos viven aquí arriba y no entre reglas. */
+:root{--paper:#eff1f3;--ink:#1a2024;--soft:#5a646e;--accent:#b8481f;--accent-claro:#f0915e;--line:#d5dae0;--card:#fff;--green:#2f6f4e;--red:#a83232;--yellow:#b7791f;--blue:#35658d}
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 .app{display:flex;min-height:100vh}

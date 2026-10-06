@@ -17,6 +17,10 @@ function accesoMostrar(){
   /* La app se oculta por CSS con esta clase. Antes quedaba dibujada detrás del login, así
    * que se podía tabular hasta el contenido con la pantalla de acceso abierta. */
   document.body.classList.add('acceso-activo');
+  /* La clave se borra al volver a mostrar la pantalla. Al cerrar sesión, lo que se escribió
+   * la vez anterior seguía en el DOM, a un clic de cualquiera que abra las herramientas del
+   * navegador. El correo se conserva: nadie debería tener que reescribirlo. */
+  accesoLimpiar();
   const correo=$('acceso-correo');
   if(correo)setTimeout(()=>correo.focus(),50);
 }
@@ -25,9 +29,28 @@ function accesoOcultar(){
   const c=$('acceso');
   if(c)c.classList.remove('abierta');
   document.body.classList.remove('acceso-activo');
+  accesoLimpiar();
+}
+
+/** Deja el formulario como estaba al abrirse: sin clave escrita, sin error y sin campos
+ *  marcados como inválidos. */
+function accesoLimpiar(){
   accesoClave(false);
-  const e=$('acceso-error');
-  if(e)e.textContent='';
+  accesoError('');
+  accesoInvalido(null);
+  const clave=$('acceso-clave');
+  if(clave)clave.value='';
+  const boton=$('acceso-entrar');
+  if(boton)boton.disabled=false;
+}
+
+/** Marca qué campo está mal. Sin esto el error solo se distingue por el color, que es
+ *  justo lo que no distingue nadie sin vista. Pasar null lo deja todo en neutro. */
+function accesoInvalido(campo){
+  for(const id of ['acceso-correo','acceso-clave']){
+    const el=$(id);
+    if(el)el.setAttribute('aria-invalid',String(campo===id));
+  }
 }
 
 /** Muestra u oculta la contraseña. Un botón aparte se lee mejor que un icono pequeño, y
@@ -55,7 +78,12 @@ function accesoError(mensaje){
 async function accesoEnviar(){
   const correo=($('acceso-correo')?.value||'').trim();
   const clave=$('acceso-clave')?.value||'';
-  if(!correo||!clave){accesoError('Escribe tu correo y contraseña.');return}
+  if(!correo||!clave){accesoError('Escribe tu correo y contraseña.');accesoInvalido(!correo?'acceso-correo':'acceso-clave');return}
+  accesoInvalido(null);
+  /* Mientras comprueba, el botón se deshabilita. Mandarlo dos veces seguidas solo produce
+   * dos peticiones y dos errores superpuestos en el mismo mensaje. */
+  const boton=$('acceso-entrar');
+  if(boton)boton.disabled=true;
   accesoError('Comprobando…');
   try{
     await sbIniciarSesion(correo,clave);
@@ -65,6 +93,7 @@ async function accesoEnviar(){
     /* Un fallo de red aquí NO es un problema del usuario: no se le pide que revise la
      * contraseña si lo que falla es que no hay conexión. */
     accesoError(sbEsFalloRed(e)?'No hay conexión con la nube. Puedes trabajar sin conexión con los datos de este dispositivo.':e.message);
+    if(boton)boton.disabled=false;
   }
 }
 

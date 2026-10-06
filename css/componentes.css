@@ -74,28 +74,54 @@ td{padding:8px 7px;border-bottom:1px solid #eaedf0;vertical-align:top}
  * se alcanza con el teclado.
  *
  * Se muestra solo cuando no hay sesión válida, de modo que abrir la app con la sesión
- * guardada sigue siendo tan rápido como antes de añadir la nube. */
-.acceso{display:none;background:var(--paper);color:var(--ink);padding:32px 24px}
+ * guardada sigue siendo tan rápido como antes de añadir la nube.
+ *
+* La composición es una sola columna centrada con un máximo de 400px: en escritorio queda
+ * equilibrada en el medio, y en móvil baja a una columna sin scroll horizontal porque el
+ * ancho lo pone el `max-width` y no un ancho fijo.
+ *
+ * Los 16px de los campos no son un capricho: por debajo de ese tamaño Safari en iOS hace
+ * zoom al enfocar y descuadra la pantalla justo cuando se está escribiendo.
+ *
+ * `dvh` evita el salto del hueco inferior en móvil al abrir y cerrar el teclado virtual; la
+ * línea en vh es el respaldo para los que no lo soportan.
+ *
+ * El botón de ver la contraseña va absoluto dentro del campo para no robarle ancho al input
+ * ni poder desbordar en móvil; el `padding-right` deja hueco para que el texto no pase por
+ * debajo.
+ *
+ * Un comentario pegado a una regla forma parte del texto con el que se declara esa regla.
+ * Reescribirlo no rompe nada mientras el manifiesto de la fase se recalcule entero, porque
+ * entonces la regla se vuelve a declarar con su texto nuevo y no queda ninguna declaración
+ * vieja que huérfane. Lo que si hay que declarar a mano es lo contrario: una línea que
+ * declaró una fase anterior y esta fase quita del todo.
+ *
+ * Sin transiciones hay menos ruido, y además se respetan `prefers-reduced-motion`: si el
+ * sistema pide quietud, las transiciones se anulan por completo. */
+
+.acceso{display:none;background:var(--paper);color:var(--ink);padding:32px 20px}
 .acceso.abierta{display:block}
 body.acceso-activo .app{display:none}
-/* dvh evita el salto del hueco inferior en móvil al abrir y cerrar el teclado virtual;
-   la línea en vh es el respaldo para los que no lo soportan. */
-.acceso-inner{max-width:880px;margin:0 auto;min-height:100vh;min-height:100dvh;display:grid;grid-template-columns:1fr minmax(300px,360px);gap:52px;align-items:center}
-.acceso-marca{max-width:32ch}
-.acceso-eyebrow{margin:0 0 13px;font:700 .7rem/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;letter-spacing:.17em;text-transform:uppercase;color:var(--accent)}
-.acceso-titulo{margin:0 0 12px;font:400 2.05rem/1.16 Georgia,serif}
-.acceso-texto{margin:0;color:var(--soft);font-size:.94rem;line-height:1.55}
-.acceso-panel{border-left:1px solid var(--line);padding-left:40px}
-.acceso-form{display:flex;flex-direction:column;gap:13px}
-.acceso-form label{margin-bottom:5px}
-.acceso-clave{display:flex;gap:8px}
-.acceso-clave input{flex:1;min-width:0}
-.acceso-ver{flex:0 0 auto;border:1px solid var(--line);background:#fff;color:var(--soft);border-radius:4px;padding:0 13px;cursor:pointer;font:600 .78rem -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-.acceso-ver:hover{color:var(--ink);border-color:#b9c0c8}
-.acceso-entrar{width:100%;margin:0;padding:12px;background:var(--accent);font-weight:700}
-.acceso-entrar:hover{background:#a94425}
-.acceso-error{color:var(--red);margin:0;font-size:.82rem;min-height:1.2em}
-.acceso-offline{margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
-.acceso-offline .btn{margin:0;width:100%;padding:11px}
-.acceso-offline .note{margin:9px 0 0;text-align:center}
-@media(max-width:760px){.acceso{padding:22px 18px}.acceso-inner{grid-template-columns:1fr;gap:28px;align-content:center;padding:26px 0}.acceso-marca{max-width:none}.acceso-titulo{font-size:1.65rem}.acceso-panel{border-left:0;padding-left:0;padding-top:24px;border-top:1px solid var(--line)}}
+.acceso-inner{width:100%;max-width:400px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;justify-content:center}
+.acceso-marca{text-align:center;margin-bottom:26px}
+.acceso-eyebrow{margin:0 0 10px;font:700 .72rem/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+.acceso-titulo{margin:0;font:400 1.9rem/1.15 Georgia,serif}
+.acceso-form{display:flex;flex-direction:column;gap:16px}
+.acceso-campo label{margin-bottom:7px;font-size:.85rem;font-weight:600;color:var(--ink)}
+.acceso-form input{min-height:50px;padding:12px 13px;font-size:16px;border-radius:6px}
+.acceso-form input[aria-invalid="true"]{border-color:var(--red)}
+.acceso-form input[aria-invalid="true"]:focus{outline-color:var(--red)}
+.acceso-clave{position:relative}
+.acceso-clave input{padding-right:62px}
+.acceso-ver{position:absolute;right:6px;top:50%;transform:translateY(-50%);min-height:38px;border:0;border-radius:5px;background:none;color:var(--accent);padding:0 10px;cursor:pointer;font:600 .85rem -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.acceso-ver:hover{text-decoration:underline}
+.acceso-entrar{width:100%;margin:0;min-height:50px;padding:13px;background:var(--accent);color:#fff;font-size:1rem;font-weight:700;border-radius:6px}
+.acceso-entrar:hover{background:#9c3f18}
+.acceso-entrar:disabled{opacity:.6;cursor:default}
+.acceso-entrar:disabled:hover{background:var(--accent)}
+.acceso-error{margin:0;color:var(--red);font-size:.86rem;min-height:1.25em}
+.acceso-offline{margin-top:20px;text-align:center}
+.acceso-offline .btn{margin:0;width:100%;min-height:48px;padding:10px;background:none;border:0;color:var(--soft);font-weight:600}
+.acceso-offline .btn:hover{color:var(--accent)}
+@media(max-width:760px){.acceso{padding:24px 18px}.acceso-inner{padding:22px 0}.acceso-titulo{font-size:1.7rem}}
+@media(prefers-reduced-motion:reduce){.acceso *{transition:none!important}}

@@ -140,6 +140,64 @@ test('enviar sin escribir nada avisa de qué falta', async () => {
   assert.equal(appOculta(ctx), true, 'debe seguir pidiendo el acceso');
 });
 
+test('el campo que falta queda marcado, no solo pintado de rojo', async () => {
+  const { ctx } = montar(servidor());
+  await ctx.accesoNube();
+  await asentar();
+  const correo = ctx.document.getElementById('acceso-correo');
+  const clave = ctx.document.getElementById('acceso-clave');
+
+  await ctx.accesoEnviar();
+  await asentar();
+  assert.equal(correo.getAttribute('aria-invalid'), 'true', 'el correo vacío debe marcarse');
+  assert.equal(clave.getAttribute('aria-invalid'), 'false', 'la clave no es lo que falta');
+
+  correo.value = 'prueba@ejemplo.test';
+  await ctx.accesoEnviar();
+  await asentar();
+  assert.equal(correo.getAttribute('aria-invalid'), 'false', 'al escribir el correo se limpia su marca');
+  assert.equal(clave.getAttribute('aria-invalid'), 'true', 'ahora la que falta es la clave');
+});
+
+test('el botón de entrar se bloquea mientras comprueba y se desbloquea si falla', async () => {
+  const { ctx } = montar(servidor({ credencialesValidas: false }));
+  await ctx.accesoNube();
+  await asentar();
+  ctx.document.getElementById('acceso-correo').value = 'prueba@ejemplo.test';
+  ctx.document.getElementById('acceso-clave').value = 'equivocada';
+  const boton = ctx.document.getElementById('acceso-entrar');
+
+  /* Sin await: el botón se deshabilita antes del primer await, que es justo lo que evita
+   * que un doble toque en el móvil mande dos peticiones. */
+  const pendiente = ctx.accesoEnviar();
+  assert.equal(boton.disabled, true, 'debe bloquearse mientras comprueba');
+  await pendiente;
+  await asentar();
+
+  assert.equal(boton.disabled, false, 'si falla tiene que volver a estar pulsable');
+  assert.equal(abierta(ctx), true, 'debe seguir pidiendo el acceso');
+  assert.match(error(ctx), /incorrectos/i);
+});
+
+test('al volver a pedir el acceso, la contraseña anterior ya no está escrita', async () => {
+  const { ctx } = montar(servidor());
+  await ctx.accesoNube();
+  await asentar();
+  ctx.document.getElementById('acceso-correo').value = 'prueba@ejemplo.test';
+  ctx.document.getElementById('acceso-clave').value = 'secreta';
+  await ctx.accesoEnviar();
+  await asentar();
+
+  ctx.accesoSalir();
+  await asentar();
+
+  assert.equal(abierta(ctx), true);
+  assert.equal(ctx.document.getElementById('acceso-clave').value, '',
+    'cerrar sesión no debe dejar la clave escrita en la pantalla');
+  assert.equal(ctx.document.getElementById('acceso-entrar').disabled, false,
+    'el botón debe quedar listo para un intento nuevo');
+});
+
 test('continuar sin conexión abre la app con los datos de este equipo', async () => {
   const serv = servidor();
   const { ctx } = montar(serv);
@@ -208,7 +266,7 @@ test('cerrar sesión vuelve a la pantalla de acceso sin borrar los datos', async
 test('index.html tiene la pantalla de acceso con los elementos que el JS busca', () => {
   const html = fs.readFileSync(path.join(RAIZ, 'index.html'), 'utf8');
 
-  for (const id of ['acceso', 'acceso-correo', 'acceso-clave', 'acceso-error']) {
+  for (const id of ['acceso', 'acceso-correo', 'acceso-clave', 'acceso-error', 'acceso-entrar']) {
     assert.ok(html.includes(`id="${id}"`), `falta id="${id}" en la pantalla de acceso`);
   }
   assert.ok(html.includes('class="acceso-ver"'), 'falta el botón de ver contraseña');
@@ -218,4 +276,23 @@ test('index.html tiene la pantalla de acceso con los elementos que el JS busca',
   assert.ok(!html.includes('capa-acceso'), 'ya no debe quedar nada del nombre anterior');
   const entrada = /onclick="accesoVerClave\(\)"/.test(html);
   assert.ok(entrada, 'el botón de ver contraseña debe estar enlazado a accesoVerClave()');
+  /* Sin esto, el aviso de "correo o contraseña incorrectos" no le llega a nadie mientras
+   * el foco sigue en el campo: el texto se pinta debajo y ya. */
+  assert.equal((html.match(/aria-describedby="acceso-error"/g) || []).length, 2,
+    'los dos campos deben apuntar al mensaje de error');
+  /* role="alert" ya es aria-live="assertive"; declarar los dos se contradice. */
+  assert.ok(!html.includes('aria-live="polite"'), 'role="alert" ya anuncia sin aria-live');
+});
+
+test('la pantalla de acceso no lleva texto de más', () => {
+  const html = fs.readFileSync(path.join(RAIZ, 'index.html'), 'utf8');
+  const acceso = html.slice(html.indexOf('<section class="acceso"'), html.indexOf('<div class="app">'));
+
+  assert.ok(acceso.includes('>Bienvenido<'), 'el título debe ser Bienvenido');
+  assert.ok(acceso.includes('>Entrar<'), 'debe quedar el botón Entrar');
+  assert.ok(acceso.includes('>Continuar sin conexión<'), 'debe quedar la salida sin conexión');
+  for (const sobra of ['Tus números, en todos tus equipos.', 'acceso-texto',
+    'se guardarán en este equipo']) {
+    assert.ok(!acceso.includes(sobra), `no debe quedar "${sobra}" en la pantalla de acceso`);
+  }
 });
