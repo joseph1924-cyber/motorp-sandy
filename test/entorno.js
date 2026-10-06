@@ -54,6 +54,7 @@ class El {
     this.disabled = false;
     this.children = [];
     this.dataset = {};
+    this.attrs = {};
     this.style = new Proxy({}, { get: () => '', set: () => true });
     this.classList = {
       _s: new Set(),
@@ -66,8 +67,11 @@ class El {
   appendChild(c) { this.children.push(c); return c; }
   removeChild(c) { this.children = this.children.filter((x) => x !== c); }
   remove() {}
-  setAttribute() {}
-  getAttribute() { return ''; }
+  /* Los atributos se guardan de verdad: hay afirmaciones de accesibilidad (aria-pressed,
+   * aria-label) que si no serían incomprobables. */
+  setAttribute(k, v) { this.attrs[k] = String(v); }
+  getAttribute(k) { return Object.prototype.hasOwnProperty.call(this.attrs, k) ? this.attrs[k] : ''; }
+  removeAttribute(k) { delete this.attrs[k]; }
   addEventListener() {}
   removeEventListener() {}
   closest() { return null; }
@@ -110,7 +114,10 @@ function crearContexto(extra = {}) {
 
   const document = {
     getElementById: porId,
-    querySelector: (sel) => (sel.startsWith('#') ? porId(sel.slice(1)) : new El(sel)),
+    /* Un stub estable por selector. Con `new El(sel)` en cada llamada, el elemento que
+     * el código modifica y el que lee la prueba serían dos objetos distintos, y cualquier
+     * afirmación sobre lo que hizo el código pasaría siempre o fallaría sin razón. */
+    querySelector: (sel) => porId(sel.startsWith('#') ? sel.slice(1) : sel),
     querySelectorAll: () => [],
     createElement: (tag) => new El(tag),
     addEventListener: () => {},

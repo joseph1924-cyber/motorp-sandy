@@ -180,6 +180,21 @@ function verificar() {
   if (lineaStyle < 0 || lineaScript < 0 || finCss < 0 || finJs < 0)
     throw new Error('El original no tiene <style>/<script> con la estructura esperada.');
 
+  /* El campo "sustituye" se resuelve antes de comparar nada porque lo necesitan el CSS y el
+   * JavaScript por igual: una regla o una linea que una fase posterior reemplazo sigue
+   * declarada, pero ya no esta en el codigo, y sin excluirla se contaria como inventada.
+   * Cada superada tiene que estar declarada antes, para que el campo no sea puerta trasera. */
+  const declaradasAntes = new Set();
+  const superadas = [];
+  const superadasSinOrigen = [];
+  for (const c of MANIFIESTO) {
+    for (const s of c.sustituye || []) {
+      if (!declaradasAntes.has(sinEspacios(s))) superadasSinOrigen.push(s);
+      superadas.push(s);
+    }
+    for (const a of c.agrega || []) declaradasAntes.add(sinEspacios(a));
+  }
+  const setSuperadas = new Set(superadas.map(sinEspacios));
   console.log('\nCSS');
   const cssOriginal = reglasCss(L.slice(lineaStyle + 1, finCss + 1).join('\n').replace(/<\/style>\s*$/, ''));
   const cssNuevo = css.flatMap((ruta) =>
@@ -190,7 +205,8 @@ function verificar() {
    * una regla nueva (el aviso de conflicto, la capa de acceso) se lee como «regla inventada». */
   const cambiosCss = MANIFIESTO.filter((c) => c.archivo.endsWith('.css'));
   const quitaCss = cambiosCss.flatMap((c) => c.quita);
-  const agregaCss = cambiosCss.flatMap((c) => c.agrega);
+  const agregaCss = cambiosCss.flatMap((c) => c.agrega)
+    .filter((l) => !setSuperadas.has(sinEspacios(l)));
   const setCssOrig = multiconjunto(cssOriginal);
   const setCssNuevo = multiconjunto(cssNuevo);
   const difCss = comparar(restar(setCssOrig, quitaCss), restar(setCssNuevo, agregaCss));
@@ -244,23 +260,8 @@ function verificar() {
   // nuevo. Si el manifiesto queda viejo, falla aquí en vez de dar un falso verde.
   const quitaJs = MANIFIESTO.filter((c) => c.archivo.endsWith('.js')).flatMap((c) => c.quita);
   const agregaJs = MANIFIESTO.filter((c) => c.archivo.endsWith('.js')).flatMap((c) => c.agrega);
-  /* Cuando una fase vuelve a tocar una linea que otra fase ya habia agregado, la linea vieja
-   * sale del codigo pero su declaracion sigue siendo cierta: se declara que fue SUSTITUIDA.
-   * Sin esto el control la marcaria como declarada y no encontrada. Cada linea superada tiene
-   * que estar declarada antes, para que el campo no sirva de puerta trasera. */
-  const declaradasAntes = new Set();
-  const superadas = [];
-  const superadasSinOrigen = [];
-  for (const c of MANIFIESTO) {
-    for (const s of c.sustituye || []) {
-      if (!declaradasAntes.has(sinEspacios(s))) superadasSinOrigen.push(s);
-      superadas.push(s);
-    }
-    for (const a of c.agrega || []) declaradasAntes.add(sinEspacios(a));
-  }
   ok('toda linea superada estaba declarada antes', superadasSinOrigen.length === 0,
     superadasSinOrigen.slice(0, 2).map((l) => l.slice(0, 60)).join(' | '));
-  const setSuperadas = new Set(superadas.map(sinEspacios));
   const setOriginal = multiconjunto(lineas);
   const setNuevo = multiconjunto(lineasNuevas);
 

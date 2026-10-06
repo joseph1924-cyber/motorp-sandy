@@ -9,19 +9,36 @@
 <link rel="stylesheet" href="css/impresion.css">
 </head>
 <body>
-<div class="capa-acceso" id="capa-acceso">
-  <div class="modal-box">
-    <div class="section-title">Moto Repuesto Sandy</div>
-    <p class="sub" id="acceso-sub">Entra con tu usuario para que los datos se sincronicen entre tus dispositivos.</p>
-    <div class="modal-grid">
-      <div><label>Correo</label><input id="acceso-correo" type="email" autocomplete="username"></div>
-      <div><label>Contraseña</label><input id="acceso-clave" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')accesoEnviar()"></div>
+<section class="acceso" id="acceso" aria-labelledby="acceso-titulo">
+  <div class="acceso-inner">
+    <div class="acceso-marca">
+      <p class="acceso-eyebrow">Moto Repuesto Sandy</p>
+      <h1 class="acceso-titulo" id="acceso-titulo">Tus números, en todos tus equipos.</h1>
+      <p class="acceso-texto">Entra para que la contabilidad se sincronice entre el taller, la casa y la oficina. Quien entre en un equipo ve lo mismo que el resto.</p>
     </div>
-    <button class="btn" style="margin-top:14px" onclick="accesoEnviar()">Entrar</button>
-    <p class="acceso-error" id="acceso-error"></p>
-    <button class="btn secondary" onclick="accesoSinConexion()">Trabajar sin conexión con los datos de este dispositivo</button>
+    <div class="acceso-panel">
+      <form class="acceso-form" id="acceso-form" onsubmit="accesoEnviar();return false" novalidate>
+        <div>
+          <label for="acceso-correo">Correo</label>
+          <input id="acceso-correo" type="email" autocomplete="username" autocapitalize="off" spellcheck="false">
+        </div>
+        <div>
+          <label for="acceso-clave">Contraseña</label>
+          <div class="acceso-clave">
+            <input id="acceso-clave" type="password" autocomplete="current-password">
+            <button class="acceso-ver" type="button" onclick="accesoVerClave()" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button>
+          </div>
+        </div>
+        <p class="acceso-error" id="acceso-error" role="alert" aria-live="polite"></p>
+        <button class="btn acceso-entrar" type="submit">Entrar</button>
+      </form>
+      <div class="acceso-offline">
+        <button class="btn secondary" type="button" onclick="accesoSinConexion()">Continuar sin conexión</button>
+        <p class="note">Los cambios se guardarán en este equipo y se subirán cuando vuelvas a entrar.</p>
+      </div>
+    </div>
   </div>
-</div>
+</section>
 <div class="app">
 <aside class="side">
   <div class="brand" id="brand">MOTO REPUESTO SANDY<small>Gestión financiera y operacional</small></div>

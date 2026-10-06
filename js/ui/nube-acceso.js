@@ -12,17 +12,39 @@
  */
 
 function accesoMostrar(){
-  const c=$('capa-acceso');
+  const c=$('acceso');
   if(c)c.classList.add('abierta');
+  /* La app se oculta por CSS con esta clase. Antes quedaba dibujada detrás del login, así
+   * que se podía tabular hasta el contenido con la pantalla de acceso abierta. */
+  document.body.classList.add('acceso-activo');
   const correo=$('acceso-correo');
   if(correo)setTimeout(()=>correo.focus(),50);
 }
 
 function accesoOcultar(){
-  const c=$('capa-acceso');
+  const c=$('acceso');
   if(c)c.classList.remove('abierta');
+  document.body.classList.remove('acceso-activo');
+  accesoClave(false);
   const e=$('acceso-error');
   if(e)e.textContent='';
+}
+
+/** Muestra u oculta la contraseña. Un botón aparte se lee mejor que un icono pequeño, y
+ *  al teclear en móvil no ayuda a recordar la clave. */
+function accesoVerClave(){
+  accesoClave(($('acceso-clave')?.type||'password')!=='text');
+}
+
+function accesoClave(visible){
+  const c=$('acceso-clave');
+  if(!c)return;
+  c.type=visible?'text':'password';
+  const b=document.querySelector('.acceso-ver');
+  if(!b)return;
+  b.textContent=visible?'Ocultar':'Ver';
+  b.setAttribute('aria-pressed',String(visible));
+  b.setAttribute('aria-label',(visible?'Ocultar':'Mostrar')+' contraseña');
 }
 
 function accesoError(mensaje){

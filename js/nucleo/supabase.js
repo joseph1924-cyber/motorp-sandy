@@ -132,10 +132,19 @@ async function sbToken(){
 }
 
 async function sbIniciarSesion(correo,clave){
-  const r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{
-    method:'POST',headers:{apikey:SUPABASE_ANON_KEY,'Content-Type':'application/json'},
-    body:JSON.stringify({email:correo,password:clave}),
-  });
+  let r;
+  /* No pasa por sbPeticion() porque aquí hace falta leer el estado y el cuerpo tal cual,
+   * pero el fallo de red hay que tratarlo igual que allí. Sin esto, entrar sin conexión
+   * tiraba el mensaje crudo del navegador ("Failed to fetch") en una pantalla en español y
+   * perdía el aviso de que se puede trabajar sin conexión. */
+  try{
+    r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{
+      method:'POST',headers:{apikey:SUPABASE_ANON_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email:correo,password:clave}),
+    });
+  }catch(e){
+    throw sbError('sin conexión con Supabase',null,null,true);
+  }
   const d=await r.json().catch(()=>null);
   if(!r.ok){
     const msg=/invalid login credentials/i.test(d?.error_description||d?.msg||'')
